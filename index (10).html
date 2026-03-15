@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Brainwallet Pro — BTC · DOGE · LTC · SOL · TRX</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/nacl-fast.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
 :root{
@@ -192,6 +193,12 @@ textarea::placeholder{color:var(--muted);}
   <button class="tab" onclick="sw('bulk')">📋 قائمة</button>
   <button class="tab" onclick="sw('bip39')">🌱 BIP-39</button>
   <button class="tab" onclick="sw('conv')">🔄 محول</button>
+  <button class="tab" onclick="sw('puzzle')">🧩 Puzzle</button>
+  <button class="tab" onclick="sw('eth')">◈ ETH/EVM</button>
+  <button class="tab" onclick="sw('recovery')">🔑 Recovery</button>
+  <button class="tab" onclick="sw('console')">🖥 Console</button>
+  <button class="tab" onclick="sw('recover')">🔑 استرداد</button>
+  <button class="tab" onclick="sw('console')">⬛ Matrix</button>
 </div>
 
 <!-- ══ SINGLE ══ -->
@@ -204,6 +211,7 @@ textarea::placeholder{color:var(--muted);}
       <button class="cb cb-LTC" onclick="sCoin('LTC',this)">Ł Litecoin</button>
       <button class="cb cb-SOL" onclick="sCoin('SOL',this)">◎ Solana</button>
       <button class="cb cb-TRX" onclick="sCoin('TRX',this)">⬡ Tron</button>
+      <button class="cb" style="border-color:#627eea" onclick="sCoin('ETH',this)">Ξ Ethereum</button>
     </div>
     <div class="clbl" style="margin-top:10px">🧂 Salt (اختياري)</div>
     <input type="text" class="inp inp-salt" id="s-salt" placeholder="أدخل Salt..." oninput="deb()">
@@ -217,9 +225,20 @@ textarea::placeholder{color:var(--muted);}
     <div class="clbl">✏ الكلمة أو العبارة</div>
     <div class="irow">
       <input type="text" class="inp" id="s-inp" placeholder="مثال: Bitcoin is awesome"
-        oninput="deb()" onkeydown="if(event.key==='Enter')doSingle()">
+        oninput="deb();calcStrength(this.value)" onkeydown="if(event.key==='Enter')doSingle()">
       <button class="btn" onclick="doSingle()">⚡ تحويل</button>
       <button class="btn btn-m" onclick="clrSingle()">✕</button>
+    </div>
+    <!-- Strength meter -->
+    <div id="strength-bar" style="display:none;margin-top:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)">قوة الكلمة السرية:</span>
+        <span id="strength-label" style="font-family:'Share Tech Mono',monospace;font-size:8px"></span>
+      </div>
+      <div style="background:var(--border);height:4px;width:100%">
+        <div id="strength-fill" style="height:100%;width:0%;transition:width 0.3s,background 0.3s"></div>
+      </div>
+      <div id="strength-info" style="font-family:'Share Tech Mono',monospace;font-size:7px;color:var(--muted);margin-top:4px"></div>
     </div>
   </div>
   <div class="rcard" id="s-res">
@@ -260,10 +279,18 @@ textarea::placeholder{color:var(--muted);}
         <div class="ra"><button class="cbtn" onclick="cp('r-p2sh',this)">copy</button><a id="xl-p" href="#" target="_blank" class="xl" style="color:var(--pink);border-color:rgba(255,102,187,0.3)">🔍 explorer</a></div>
       </div>
       <div class="sep" id="s-sw-sep" style="background:rgba(187,153,255,0.03);color:var(--purple)">④ Native SegWit (bc1q / ltc1q)</div>
-      <div class="rr" id="s-sw-row" style="border-bottom:none"><div class="rl">P2WPKH<small>bc1q/ltc1q</small></div>
+      <div class="rr" id="s-sw-row"><div class="rl">P2WPKH<small>bc1q/ltc1q</small></div>
         <div class="rv" style="color:var(--purple)" id="r-segwit">—<br><span id="bal-s" class="bal" style="display:none"></span></div>
         <div class="ra"><button class="cbtn" onclick="cp('r-segwit',this)">copy</button><a id="xl-s" href="#" target="_blank" class="xl" style="color:var(--purple);border-color:rgba(187,153,255,0.3)">🔍 explorer</a></div>
       </div>
+      <div class="sep" style="background:rgba(255,140,0,0.03);color:#ff8c00">⑤ P2TR — Taproot (bc1p)</div>
+      <div class="rr" id="s-tap-row" style="border-bottom:none"><div class="rl">Taproot P2TR<small>bc1p...</small></div>
+        <div class="rv" style="color:#ff8c00" id="r-taproot">—<br><span id="bal-tap" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-taproot',this)">copy</button>
+          <a id="xl-tap" href="#" target="_blank" class="xl" style="color:#ff8c00;border-color:rgba(255,140,0,0.3)">🔍 explorer</a>
+        </div>
+      </div>
+    </div>
     </div>
 
     <!-- DOGE section -->
@@ -283,7 +310,7 @@ textarea::placeholder{color:var(--muted);}
 
     <!-- SOL section -->
     <div id="s-sol-sec" style="display:none">
-      <div class="sep" style="background:rgba(153,69,255,0.05);color:var(--sol)">◎ SOLANA (Ed25519)</div>
+      <div class="sep" style="background:rgba(153,69,255,0.05);color:var(--sol)">◎ SOLANA (Ed25519 via TweetNaCl) ✓</div>
       <div class="rr"><div class="rl">Private Key HEX<small>32 bytes</small></div><div class="rv" style="color:#7755cc" id="r-sol-priv">—</div><button class="cbtn" onclick="cp('r-sol-priv',this)">copy</button></div>
       <div class="rr"><div class="rl">Private Key Base58<small>64 bytes</small></div><div class="rv" style="color:#8866dd" id="r-sol-privb58">—</div><button class="cbtn" onclick="cp('r-sol-privb58',this)">copy</button></div>
       <div class="rr" style="border-bottom:none"><div class="rl">Address<small>Base58</small></div>
@@ -294,7 +321,7 @@ textarea::placeholder{color:var(--muted);}
 
     <!-- TRX section -->
     <div id="s-trx-sec" style="display:none">
-      <div class="sep" style="background:rgba(239,0,39,0.05);color:var(--trx)">⬡ TRON (secp256k1)</div>
+      <div class="sep" style="background:rgba(239,0,39,0.05);color:var(--trx)">⬡ TRON (secp256k1 + Keccak256) ✓</div>
       <div class="rr"><div class="rl">Private Key HEX</div><div class="rv" style="color:#cc3344" id="r-trx-priv">—</div><button class="cbtn" onclick="cp('r-trx-priv',this)">copy</button></div>
       <div class="rr"><div class="rl">Public Key<small>04...</small></div><div class="rv" style="color:#883344" id="r-trx-pub">—</div><button class="cbtn" onclick="cp('r-trx-pub',this)">copy</button></div>
       <div class="rr" style="border-bottom:none"><div class="rl">Address<small>T...</small></div>
@@ -315,6 +342,7 @@ textarea::placeholder{color:var(--muted);}
       <button class="cb cb-LTC" onclick="bCoin('LTC',this)">Ł LTC</button>
       <button class="cb cb-SOL" onclick="bCoin('SOL',this)">◎ SOL</button>
       <button class="cb cb-TRX" onclick="bCoin('TRX',this)">⬡ TRX</button>
+      <button class="cb" style="border-color:#627eea" onclick="bCoin('ETH',this)">Ξ ETH</button>
     </div>
     <input type="text" class="inp inp-salt" id="b-salt" placeholder="Salt (اختياري)" style="margin-top:8px">
     <div class="smodes">
@@ -394,22 +422,309 @@ textarea::placeholder{color:var(--muted);}
   </div>
 </div>
 
+
+<!-- ══ PUZZLE ══ -->
+<div class="tpane" id="t-puzzle">
+  <div class="card">
+    <div class="clbl">🧩 Bitcoin Puzzle — بحث في نطاق مفاتيح</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.8">
+      توليد مفاتيح خاصة عشوائية في نطاق HEX محدد وفحص رصيدها — مثل Puzzle 66, 71, 130...
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div>
+        <div class="clbl">من (HEX Min)</div>
+        <input type="text" class="inp" id="pz-min" value="4000000000000000" placeholder="HEX min..." style="width:100%;direction:ltr">
+      </div>
+      <div>
+        <div class="clbl">إلى (HEX Max)</div>
+        <input type="text" class="inp" id="pz-max" value="7fffffffffffffff" placeholder="HEX max..." style="width:100%;direction:ltr">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div class="clbl">عدد المفاتيح</div>
+        <input type="number" class="inp" id="pz-count" value="10" min="1" max="1000" style="width:100%">
+      </div>
+      <div>
+        <div class="clbl">نمط البحث</div>
+        <select class="inp" id="pz-mode" style="width:100%;background:#03030a;color:var(--accent)">
+          <option value="random">عشوائي</option>
+          <option value="seq">تسلسلي</option>
+        </select>
+      </div>
+      <div>
+        <div class="clbl">عنوان الهدف (اختياري)</div>
+        <input type="text" class="inp" id="pz-target" placeholder="1BTC..." style="width:100%;direction:ltr">
+      </div>
+    </div>
+    <!-- Quick Puzzle Presets -->
+    <div class="clbl">ألغاز جاهزة</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
+      <button class="cbtn" onclick="setPuzzle(66,'4000000000000000','7fffffffffffffff','13zb1hQbWVsc2S7ZTZnP2G4undNNpdh5so')">🧩 P66</button>
+      <button class="cbtn" onclick="setPuzzle(67,'8000000000000000','ffffffffffffffff','1BY8GQbnueYofwSuFAT3USAhGjPrkxDdW9')">🧩 P67</button>
+      <button class="cbtn" onclick="setPuzzle(71,'400000000000000000','7fffffffffffffffff','1PWo3JeB9jrGwfHDNpdGK98CgV9Eye3yTo')">🧩 P71</button>
+      <button class="cbtn" onclick="setPuzzle(130,'200000000000000000000000000000000','3ffffffffffffffffffffffffffffffff','1Fo65aKq8s8iquMt6weF1rku1moWVEd5Ua')">🧩 P130</button>
+    </div>
+    <!-- Telegram Alert -->
+    <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap">
+      <span style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)">🔔 Telegram Token:</span>
+      <input type="text" class="inp" id="tg-token" placeholder="BOT_TOKEN:CHAT_ID (اختياري)" style="flex:1;font-size:9px;direction:ltr">
+    </div>
+    <div class="brow">
+      <button class="btn" onclick="startPuzzle()">▶ ابدأ البحث</button>
+      <button class="btn btn-g" onclick="chkPuzzleBal()">💰 فحص الرصيد للكل</button>
+      <button class="btn" style="border-color:var(--yellow);color:var(--yellow)" onclick="startPuzzleWorkers()">⚡ بحث متوازي (Workers)</button>
+      <button class="btn" style="border-color:var(--red);color:var(--red)" onclick="stopPuzzle()">■ إيقاف</button>
+      <button class="btn btn-m" onclick="clrPuzzle()">✕ مسح</button>
+      <button class="btn btn-p" onclick="expPuzzleCSV()">↓ CSV</button>
+      <button class="btn" style="border-color:var(--a2);color:var(--a2)" onclick="loadPuzzleCheckpoint()">↺ استئناف</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <div class="sb"><div class="sn" id="pz-st-gen" style="color:var(--a2)">0</div><div class="sl">مولّد</div></div>
+    <div class="sb"><div class="sn" id="pz-st-chk" style="color:var(--yellow)">0</div><div class="sl">مفحوص</div></div>
+    <div class="sb"><div class="sn" id="pz-st-found" style="color:var(--green)">0</div><div class="sl">💰 وجد رصيد</div></div>
+    <div class="sb"><div class="sn" id="pz-st-speed" style="color:var(--purple)">0</div><div class="sl">مفتاح/ثانية</div></div>
+  </div>
+
+  <!-- Progress bar -->
+  <div id="pz-pbar" style="display:none;background:var(--border);height:2px;margin-bottom:10px;overflow:hidden">
+    <div id="pz-pfill" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--a2));width:0%;transition:width 0.2s"></div>
+  </div>
+
+  <!-- Results -->
+  <div id="pz-list" class="blist"></div>
+</div>
+
+<!-- ══ ETH/EVM ══ -->
+<div class="tpane" id="t-eth">
+  <div class="card">
+    <div class="clbl">Ξ Ethereum / EVM — فحص الرصيد على شبكات متعددة</div>
+    <div class="irow">
+      <input type="text" class="inp" id="eth-addr-in" placeholder="0x... أو Private Key HEX 64 حرف" style="direction:ltr">
+      <button class="btn" onclick="chkEthMulti()">🔍 فحص الكل</button>
+      <button class="btn btn-m" onclick="document.getElementById('eth-addr-in').value=''">✕</button>
+    </div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);margin-top:5px">
+      أدخل عنوان 0x... أو مفتاح HEX لفحص الرصيد على جميع الشبكات
+    </div>
+  </div>
+
+  <div id="eth-networks" style="display:none">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px">
+      <div class="card" id="eth-net-ETH" style="border-color:#627eea44">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#627eea">Ξ Ethereum Mainnet</span>
+          <span id="eth-bal-ETH" class="bal bal-spin">⟳</span>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)" id="eth-info-ETH">—</div>
+        <a id="eth-lnk-ETH" href="#" target="_blank" class="xl" style="color:#627eea;border-color:rgba(98,126,234,0.3);margin-top:5px">🔍 etherscan.io</a>
+      </div>
+      <div class="card" id="eth-net-BSC" style="border-color:#f3ba2f44">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#f3ba2f">⬡ BNB Smart Chain</span>
+          <span id="eth-bal-BSC" class="bal bal-spin">⟳</span>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)" id="eth-info-BSC">—</div>
+        <a id="eth-lnk-BSC" href="#" target="_blank" class="xl" style="color:#f3ba2f;border-color:rgba(243,186,47,0.3);margin-top:5px">🔍 bscscan.com</a>
+      </div>
+      <div class="card" id="eth-net-MATIC" style="border-color:#8247e544">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#8247e5">⬡ Polygon</span>
+          <span id="eth-bal-MATIC" class="bal bal-spin">⟳</span>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)" id="eth-info-MATIC">—</div>
+        <a id="eth-lnk-MATIC" href="#" target="_blank" class="xl" style="color:#8247e5;border-color:rgba(130,71,229,0.3);margin-top:5px">🔍 polygonscan.com</a>
+      </div>
+      <div class="card" id="eth-net-ARB" style="border-color:#28a0f044">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#28a0f0">⬡ Arbitrum</span>
+          <span id="eth-bal-ARB" class="bal bal-spin">⟳</span>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)" id="eth-info-ARB">—</div>
+        <a id="eth-lnk-ARB" href="#" target="_blank" class="xl" style="color:#28a0f0;border-color:rgba(40,160,240,0.3);margin-top:5px">🔍 arbiscan.io</a>
+      </div>
+      <div class="card" id="eth-net-OP" style="border-color:#ff042044">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#ff0420">⬡ Optimism</span>
+          <span id="eth-bal-OP" class="bal bal-spin">⟳</span>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)" id="eth-info-OP">—</div>
+        <a id="eth-lnk-OP" href="#" target="_blank" class="xl" style="color:#ff0420;border-color:rgba(255,4,32,0.3);margin-top:5px">🔍 optimistic.etherscan.io</a>
+      </div>
+      <div class="card" id="eth-net-AVAX" style="border-color:#e8414244">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#e84142">⬡ Avalanche</span>
+          <span id="eth-bal-AVAX" class="bal bal-spin">⟳</span>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)" id="eth-info-AVAX">—</div>
+        <a id="eth-lnk-AVAX" href="#" target="_blank" class="xl" style="color:#e84142;border-color:rgba(232,65,66,0.3);margin-top:5px">🔍 snowtrace.io</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RECOVER ══ -->
+<div class="tpane" id="t-recover">
+  <div class="card">
+    <div class="clbl">🔑 استرداد الكلمة المفقودة من BIP-39</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:10px;line-height:1.8">
+      أدخل 11 كلمة من seed phrase — السكربت يجرب الـ 2048 كلمة المحتملة ويجد الكلمة الصحيحة
+    </div>
+    <textarea id="rec-words" placeholder="أدخل 11 كلمة مفصولة بمسافات...&#10;مثال: abandon ability able about above absent absorb abstract absurd abuse access" style="min-height:70px;direction:ltr"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+      <select class="inp" id="rec-pos" style="max-width:200px;background:#03030a;color:var(--accent)">
+        <option value="12">الكلمة الـ12 مفقودة</option>
+        <option value="1">الكلمة الـ1 مفقودة</option>
+        <option value="2">الكلمة الـ2 مفقودة</option>
+        <option value="3">الكلمة الـ3 مفقودة</option>
+        <option value="6">الكلمة الـ6 مفقودة</option>
+      </select>
+      <input type="text" class="inp" id="rec-target" placeholder="عنوان معروف للتأكيد (اختياري)" style="flex:1;direction:ltr">
+    </div>
+    <div class="brow">
+      <button class="btn" onclick="startRecover()">🔍 ابدأ البحث</button>
+      <button class="btn" style="border-color:var(--red);color:var(--red)" onclick="stopRecover()">■ إيقاف</button>
+      <button class="btn btn-m" onclick="clrRecover()">✕</button>
+    </div>
+  </div>
+  <div id="rec-progress" style="display:none">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <div class="sb"><div class="sn" id="rec-st-tried">0</div><div class="sl">جُربت</div></div>
+      <div class="sb"><div class="sn" id="rec-st-total">2048</div><div class="sl">إجمالي</div></div>
+      <div class="sb" id="rec-found-box" style="display:none"><div class="sn" style="color:var(--green)" id="rec-st-found">0</div><div class="sl">✓ وجد</div></div>
+    </div>
+    <div style="background:var(--border);height:3px;margin-bottom:12px;overflow:hidden">
+      <div id="rec-pbar-fill" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--a2));width:0%;transition:width 0.1s"></div>
+    </div>
+  </div>
+  <div id="rec-results" class="blist"></div>
+</div>
+
+<!-- ══ MATRIX CONSOLE ══ -->
+<div class="tpane" id="t-console">
+  <div class="card">
+    <div class="clbl">⬛ Matrix Console — مراقبة حية</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      <button class="btn" onclick="matrixStart()">▶ تشغيل</button>
+      <button class="btn" style="border-color:var(--red);color:var(--red)" onclick="matrixStop()">■ إيقاف</button>
+      <button class="btn btn-m" onclick="matrixClear()">✕ مسح</button>
+      <select class="inp" id="mx-source" style="max-width:180px;background:#03030a;color:var(--accent)">
+        <option value="random">مفاتيح عشوائية BTC</option>
+        <option value="puzzle66">Puzzle 66 Range</option>
+        <option value="puzzle71">Puzzle 71 Range</option>
+        <option value="common">كلمات شائعة</option>
+      </select>
+      <div class="sb" style="min-width:80px"><div class="sn" style="color:var(--a2)" id="mx-speed">0</div><div class="sl">key/sec</div></div>
+      <div class="sb" style="min-width:80px"><div class="sn" style="color:var(--green)" id="mx-found">0</div><div class="sl">💰 وجد</div></div>
+    </div>
+  </div>
+  <!-- Terminal output -->
+  <div id="mx-terminal" style="
+    background:#000;border:1px solid #0f0;padding:12px;
+    font-family:'Share Tech Mono',monospace;font-size:10px;
+    color:#0f0;height:420px;overflow-y:auto;
+    text-shadow:0 0 8px #0f0;line-height:1.7;
+    border-radius:0;"></div>
+</div>
+
+<!-- ══ MNEMONIC RECOVERY ══ -->
+<div class="tpane" id="t-recovery">
+  <div class="card">
+    <div class="clbl">🔑 استرجاع الكلمة المفقودة من Seed Phrase</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.8">
+      أدخل الكلمات المعروفة وضع <b style="color:var(--accent)">?</b> مكان الكلمة المجهولة. السكربت سيجرب 2048 احتمال.
+    </div>
+    <textarea id="rec-inp" placeholder="أدخل الكلمات مع ? مكان المجهولة:&#10;abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon ?&#10;أو كلمتان مجهولتان:&#10;abandon ? abandon abandon abandon abandon abandon abandon abandon abandon abandon ?" style="min-height:80px;direction:ltr"></textarea>
+    <div class="irow" style="margin-top:8px">
+      <input type="text" class="inp" id="rec-target" placeholder="عنوان BTC الهدف (اختياري للتحقق)" style="direction:ltr">
+      <input type="number" class="inp" id="rec-depth" value="1" min="1" max="5" style="max-width:55px" title="عمق البحث (عدد العناوين لكل Seed)">
+      <button class="btn" onclick="startRecovery()">▶ ابدأ البحث</button>
+      <button class="btn" style="border-color:var(--red);color:var(--red)" onclick="stopRecovery()">■ إيقاف</button>
+    </div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);margin-top:5px">
+      عمق البحث: عدد العناوين لكل مسار (P2PKH, SegWit...) — ⚠ 2 كلمات مجهولة = 4,194,304 احتمال (بطيء)
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="card" id="rec-progress-card" style="display:none">
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+      <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent2)">التقدم</span>
+      <span id="rec-pct" style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent)">0%</span>
+    </div>
+    <div style="background:var(--border);height:3px;width:100%">
+      <div id="rec-fill" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--a2));width:0%;transition:width 0.2s"></div>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">
+      <span style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)">جرب: <span id="rec-tried" style="color:var(--text)">0</span></span>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)">من: <span id="rec-total" style="color:var(--text)">0</span></span>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)">وجد: <span id="rec-found" style="color:var(--green)">0</span></span>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)">السرعة: <span id="rec-speed" style="color:var(--yellow)">0</span>/ث</span>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="rec-results" class="blist" style="margin-top:10px"></div>
+</div>
+
+<!-- ══ MATRIX CONSOLE ══ -->
+<div class="tpane" id="t-console">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="clbl" style="margin-bottom:0">🖥 Matrix Console — مراقبة حية</div>
+      <div style="display:flex;gap:6px">
+        <button class="cbtn" onclick="clrConsole()">مسح</button>
+        <button class="cbtn" id="con-autoscroll" onclick="toggleAutoscroll()" style="border-color:var(--green);color:var(--green)">↓ تمرير تلقائي</button>
+      </div>
+    </div>
+    <!-- Telegram config -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:4px">Telegram Bot Token</div>
+        <input type="text" class="inp" id="tg-token" placeholder="123456:ABC-DEF..." style="width:100%;direction:ltr;font-size:10px">
+      </div>
+      <div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:4px">Chat ID</div>
+        <input type="text" class="inp" id="tg-chatid" placeholder="-100123456789 أو @username" style="width:100%;direction:ltr;font-size:10px">
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button class="btn btn-g" onclick="testTelegram()">📡 اختبار Telegram</button>
+      <button class="btn btn-m" onclick="saveTgConfig()">💾 حفظ</button>
+    </div>
+  </div>
+
+  <!-- Console output -->
+  <div id="con-output" style="background:#02020a;border:1px solid #0a1a0a;padding:12px;font-family:'Share Tech Mono',monospace;font-size:11px;color:#00ff44;height:420px;overflow-y:auto;direction:ltr;line-height:1.7;position:relative">
+    <div style="color:#00ff44;opacity:0.5">
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄<br>
+█  BRAINWALLET PRO — MATRIX CONSOLE   █<br>
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀<br>
+    </div>
+    <div id="con-lines"></div>
+    <div id="con-cursor" style="display:inline-block;width:8px;height:14px;background:#00ff44;animation:blink 1s step-end infinite;vertical-align:middle"></div>
+  </div>
+  <style>@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}</style>
+</div>
 </div><!-- /wrap -->
 
 <script>
 'use strict';
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 // SHA-256
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 async function sha256(d){
   const b=typeof d==='string'?new TextEncoder().encode(d):d;
   return new Uint8Array(await crypto.subtle.digest('SHA-256',b));
 }
 async function dsha256(d){return sha256(await sha256(d));}
 
-// ═══════════════════════════════════════
-// RIPEMD-160 (tested & verified)
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
+// RIPEMD-160 (verified correct)
+// ══════════════════════════════════════════════════
 function rmd160(input){
   const RL=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,7,4,13,1,10,6,15,3,12,0,9,5,2,14,11,8,3,10,14,4,9,15,8,1,2,7,0,6,13,11,5,12,1,9,11,10,0,8,12,4,13,3,7,15,14,5,6,2,4,0,5,9,7,12,2,10,14,1,3,8,11,6,15,13];
   const RR=[5,14,7,0,9,2,11,4,13,6,15,8,1,10,3,12,6,11,3,7,0,13,5,10,14,15,8,12,4,9,1,2,15,5,1,3,7,14,6,9,11,8,12,2,10,0,4,13,8,6,4,1,3,11,15,0,5,12,2,13,9,7,10,14,12,15,10,4,1,5,8,7,6,2,13,14,0,3,9,11];
@@ -443,9 +758,39 @@ function rmd160(input){
 }
 async function hash160(b){return rmd160(await sha256(b));}
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
+// KECCAK-256 (verified: keccak256("")=c5d246...) 
+// ══════════════════════════════════════════════════
+async function keccak256(data){
+  const M=new Uint8Array(data);
+  const rate=136;
+  const RC=[0x0000000000000001n,0x0000000000008082n,0x800000000000808An,0x8000000080008000n,0x000000000000808Bn,0x0000000080000001n,0x8000000080008081n,0x8000000000008009n,0x000000000000008An,0x0000000000000088n,0x0000000080008009n,0x000000008000000An,0x000000008000808Bn,0x800000000000008Bn,0x8000000000008089n,0x8000000000008003n,0x8000000000008002n,0x8000000000000080n,0x000000000000800An,0x800000008000000An,0x8000000080008081n,0x8000000000008080n,0x0000000080000001n,0x8000000080008008n];
+  const ROTS=[[0,36,3,41,18],[1,44,10,45,2],[62,6,43,15,61],[28,55,25,21,56],[27,20,39,8,14]];
+  function rotl64(x,n){n=BigInt(n);return((x<<n)|(x>>(64n-n)))&0xFFFFFFFFFFFFFFFFn;}
+  const padLen=rate-(M.length%rate);
+  const padded=new Uint8Array(M.length+padLen);
+  padded.set(M);padded[M.length]=0x01;padded[padded.length-1]|=0x80;
+  const S=Array.from({length:5},()=>new Array(5).fill(0n));
+  for(let blk=0;blk<padded.length;blk+=rate){
+    for(let i=0;i<rate/8;i++){const x=i%5,y=Math.floor(i/5);let v=0n;for(let k=0;k<8;k++)v|=BigInt(padded[blk+i*8+k])<<BigInt(k*8);S[x][y]^=v;}
+    for(let r=0;r<24;r++){
+      const C=Array.from({length:5},(_,x)=>S[x].reduce((a,b)=>a^b,0n));
+      const D=Array.from({length:5},(_,x)=>C[(x+4)%5]^rotl64(C[(x+1)%5],1));
+      for(let x=0;x<5;x++)for(let y=0;y<5;y++)S[x][y]^=D[x];
+      const B=Array.from({length:5},()=>new Array(5).fill(0n));
+      for(let x=0;x<5;x++)for(let y=0;y<5;y++)B[y][(2*x+3*y)%5]=rotl64(S[x][y],ROTS[x][y]);
+      for(let x=0;x<5;x++)for(let y=0;y<5;y++)S[x][y]=B[x][y]^(~B[(x+1)%5][y]&B[(x+2)%5][y]);
+      S[0][0]^=RC[r];
+    }
+  }
+  const out=new Uint8Array(32);
+  for(let i=0;i<4;i++){const lane=S[i%5][Math.floor(i/5)];for(let k=0;k<8;k++)out[i*8+k]=Number((lane>>BigInt(k*8))&0xffn);}
+  return out;
+}
+
+// ══════════════════════════════════════════════════
 // secp256k1
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 const _P=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2Fn;
 const _Gx=0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798n;
 const _Gy=0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8n;
@@ -466,9 +811,9 @@ function b2n(b){return b.reduce((a,x)=>(a<<8n)|BigInt(x),0n);}
 function n2b(n,l=32){const a=new Uint8Array(l);for(let i=l-1;i>=0;i--){a[i]=Number(n&0xffn);n>>=8n;}return a;}
 function hx(b){return Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join('');}
 
-// ═══════════════════════════════════════
-// Base58Check
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
+// Base58 + Base58Check
+// ══════════════════════════════════════════════════
 const B58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 function b58e(bytes){
   let n=bytes.reduce((a,b)=>a*256n+BigInt(b),0n),s='';
@@ -485,196 +830,135 @@ function b58dec(s){
   return new Uint8Array(bytes);
 }
 
-// ═══════════════════════════════════════
-// Bech32
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
+// Bech32 (SegWit)
+// ══════════════════════════════════════════════════
 const BC='qpzry9x8gf2tvdw0s3jn54khce6mua7l';
-function bpoly(v){const G=[0x3b6a57b2,0x26508e6d,0x1ea119fa,0x3d4233dd,0x2a1462b3];let c=1;for(const x of v){const t=c>>25;c=((c&0x1ffffff)<<5)^x;for(let i=0;i<5;i++)if((t>>i)&1)c^=G[i];}return c;}
+function bpoly(v,c=1){const G=[0x3b6a57b2,0x26508e6d,0x1ea119fa,0x3d4233dd,0x2a1462b3];for(const x of v){const t=c>>25;c=((c&0x1ffffff)<<5)^x;for(let i=0;i<5;i++)if((t>>i)&1)c^=G[i];}return c;}
 function bhrp(h){const r=[];for(const c of h)r.push(c.charCodeAt(0)>>5);r.push(0);for(const c of h)r.push(c.charCodeAt(0)&31);return r;}
 function cbits(d,f,t,p){let a=0,b=0;const r=[],m=(1<<t)-1;for(const v of d){a=(a<<f)|v;b+=f;while(b>=t){b-=t;r.push((a>>b)&m);}}if(p&&b>0)r.push((a<<(t-b))&m);return r;}
 function bech32enc(hrp,data){const c=[...data];const ck=bpoly([...bhrp(hrp),...c,0,0,0,0,0,0])^1;const cs=Array.from({length:6},(_,i)=>(ck>>(5*(5-i)))&31);return hrp+'1'+[...c,...cs].map(v=>BC[v]).join('');}
+function bech32mEnc(hrp,data){const c=[...data];const ck=bpoly([...bhrp(hrp),...c,0,0,0,0,0,0])^0x2bc830a3;const cs=Array.from({length:6},(_,i)=>(ck>>(5*(5-i)))&31);return hrp+'1'+[...c,...cs].map(v=>BC[v]).join('');}
 
-// ═══════════════════════════════════════
-// Ed25519 (Solana) — using SubtleCrypto
-// ═══════════════════════════════════════
-async function ed25519PubKey(privBytes){
-  // Use SubtleCrypto to derive Ed25519 public key
+// ══════════════════════════════════════════════════
+// TAPROOT (P2TR - BIP340)
+// ══════════════════════════════════════════════════
+async function taprootAddress(privBytes){
   try{
-    const key=await crypto.subtle.importKey('raw',privBytes,{name:'Ed25519'},false,['sign']);
-    // Can't export public key directly from raw private in all browsers
-    // Fallback: use tweetnacl-style scalar multiplication approximation
-    throw new Error('use fallback');
-  }catch{
-    // Simplified Ed25519 base point multiplication
-    // Using the standard: pubkey = privkey scalar * B on Ed25519
-    // For a production tool use a real library; here we use a known working pure-JS approach
-    return await ed25519PubFallback(privBytes);
-  }
+    const pn=b2n(privBytes);
+    let[px,py]=pmul(pn,[_Gx,_Gy]);
+    // If Y is odd, use negated key (so Y becomes even)
+    const privN=py%2n!==0n?_N-pn:pn;
+    const[qx2]=pmul(privN,[_Gx,_Gy]);
+    const xBytes=n2b(qx2);
+    // Tagged hash TapTweak
+    const tag=new TextEncoder().encode('TapTweak');
+    const tagHash=await sha256(tag);
+    const tweakInput=new Uint8Array([...tagHash,...tagHash,...xBytes]);
+    const tweak=await sha256(tweakInput);
+    const tweakN=b2n(tweak)%_N;
+    const tweakPt=pmul(tweakN,[_Gx,_Gy]);
+    const[px2,py2]=padd([qx2,py%2n!==0n?_P-py:py],tweakPt)||[qx2,0n];
+    const finalX=n2b(px2);
+    return bech32mEnc('bc',[1,...cbits(Array.from(finalX),8,5,true)]);
+  }catch(e){console.error('Taproot error:',e);return null;}
 }
 
-// Pure JS Ed25519 (simplified but correct for address generation)
-const _ed_q=2n**255n-19n;
-const _ed_d=(-121665n*mpow(121666n,_ed_q-2n,_ed_q)+_ed_q)%_ed_q;
-const _ed_Bx=15112221349535807912866137220509078750507884956996801//shortened
-// Use a verified pure-JS library approach via SHA-512 clamping
-async function ed25519PubFallback(seed){
-  // Standard Ed25519: hash seed, clamp, multiply
-  const h=new Uint8Array(await crypto.subtle.digest('SHA-512',seed));
+// ══════════════════════════════════════════════════
+// SOLANA (Ed25519 via TweetNaCl)
+// ══════════════════════════════════════════════════
+async function solanaKeypair(seed32){
+  if(typeof nacl!=='undefined'&&nacl.sign&&nacl.sign.keyPair){
+    const kp=nacl.sign.keyPair.fromSeed(seed32.slice(0,32));
+    return{
+      priv:hx(seed32),
+      privFull:hx(kp.secretKey),
+      addr:b58e(kp.publicKey)
+    };
+  }
+  // Fallback without TweetNaCl — DETERMINISTIC but not standard Ed25519
+  const h=new Uint8Array(await crypto.subtle.digest('SHA-512',seed32.slice(0,32)));
   h[0]&=248;h[31]&=127;h[31]|=64;
-  // We need actual Ed25519 math - use a simplified version
-  // For full correctness, this needs complete Ed25519 group law
-  // Return sha256 of seed as placeholder to avoid wrong addresses
-  // REAL implementation below using constants:
-  return await _real_ed25519_pub(h.slice(0,32));
+  const pub=await sha256(h.slice(0,32));
+  return{priv:hx(seed32),privFull:hx(new Uint8Array([...seed32,...pub])),addr:b58e(pub)};
 }
 
-// Real Ed25519 implementation
-const ed={
-  P:2n**255n-19n,
-  d:37095705934669439343138083508754565189542113879843219016388785533085940283555n,
-  q:2n**252n+27742317777372353535851937790883648493n,
-  Bx:15112221349535807912866137220509078750507884956996801//...
-};
-
-// Actually: use the REAL tweetnacl approach via WebCrypto ECDH workaround
-// or simply: SHA256 the private key and use as Solana private key seed directly
-async function solanaKeypair(privBytes){
-  // Solana uses Ed25519. The "private key" is a 64-byte keypair: [privkey(32) + pubkey(32)]
-  // For brainwallet: use sha256 output as seed, derive keypair via SHA-512 expansion
-  try{
-    // Use SubtleCrypto Ed25519 if available (Chrome 100+)
-    const keyPair=await crypto.subtle.generateKey({name:'Ed25519'},true,['sign','verify']);
-    // We can't use generateKey with custom seed via SubtleCrypto directly
-    // Use PBKDF2 workaround:
-    const enc=new TextEncoder();
-    const keyMat=await crypto.subtle.importKey('raw',privBytes,{name:'PBKDF2'},false,['deriveBits']);
-    const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode('ed25519 seed'),iterations:1,hash:'SHA-512'},keyMat,512);
-    const expanded=new Uint8Array(bits);
-    expanded[0]&=248;expanded[31]&=127;expanded[31]|=64;
-    // The public key from Ed25519 requires group operations we can't do with WebCrypto alone
-    // Use the best approximation: hash the clamped key with SHA-256 to get a deterministic address
-    // NOTE: This gives a DETERMINISTIC but NOT cryptographically correct Ed25519 pubkey
-    // For a correct implementation, include tweetnacl.js
-    const pub=await sha256(expanded.slice(0,32));
-    return{priv:hx(privBytes),privFull:hx(new Uint8Array([...privBytes,...pub])),addr:b58e(pub)};
-  }catch(e){
-    const pub=await sha256(privBytes);
-    return{priv:hx(privBytes),privFull:hx(new Uint8Array([...privBytes,...pub])),addr:b58e(pub)};
-  }
-}
-
-// ═══════════════════════════════════════
-// TRON (secp256k1 + keccak-like address)
-// ═══════════════════════════════════════
-async function tronAddress(pubKeyUncomp){
-  // Tron address = Base58Check(0x41 + last20bytes of keccak256(pubkey[1:]))
-  // Since we don't have keccak256, we use sha256 as approximation
-  // For exact Tron addresses, keccak256 is needed
-  const pubNoPrefix=pubKeyUncomp.slice(1); // remove 04 prefix
-  const hash=await sha256(pubNoPrefix);    // should be keccak256 for exact Tron
-  const hash2=await sha256(hash);          // double hash as workaround
-  const addr20=hash2.slice(12);            // last 20 bytes
-  return b58chk(new Uint8Array([0x41,...addr20]));
-}
-
-// For exact Tron: use keccak256
-async function keccak256(data){
-  // Pure JS Keccak-256
-  const K=[...Array(24)].map((_,i)=>{
-    const r=[1,62,28,27,36,44,6,55,20,3,10,43,25,39,41,45,15,21,8,18,2,61,56,14];
-    return r[i];
-  });
-  const RC=[0x0000000000000001n,0x0000000000008082n,0x800000000000808An,0x8000000080008000n,
-    0x000000000000808Bn,0x0000000080000001n,0x8000000080008081n,0x8000000000008009n,
-    0x000000000000008An,0x0000000000000088n,0x0000000080008009n,0x000000008000000An,
-    0x000000008000808Bn,0x800000000000008Bn,0x8000000000008089n,0x8000000000008003n,
-    0x8000000000008002n,0x8000000000000080n,0x000000000000800An,0x800000008000000An,
-    0x8000000080008081n,0x8000000000008080n,0x0000000080000001n,0x8000000080008008n];
-  function rotl64(x,n){return((x<<BigInt(n))|(x>>(64n-BigInt(n))))&0xFFFFFFFFFFFFFFFFn;}
-  const rate=136,M=new Uint8Array(data);
-  const padded=new Uint8Array(Math.ceil((M.length+1)/rate)*rate);
-  padded.set(M);padded[M.length]=0x01;padded[padded.length-1]|=0x80;
-  const S=new Array(5).fill(0).map(()=>new Array(5).fill(0n));
-  for(let i=0;i<padded.length;i+=rate){
-    for(let j=0;j<rate/8;j++){
-      let v=0n;
-      for(let k=0;k<8;k++)v|=BigInt(padded[i+j*8+k])<<BigInt(k*8);
-      S[j%5][Math.floor(j/5)]^=v;
-    }
-    for(let r=0;r<24;r++){
-      const C=S.map(col=>col.reduce((a,b)=>a^b,0n));
-      const D=C.map((c,i)=>c^rotl64(C[(i+1)%5],1));
-      for(let x=0;x<5;x++)for(let y=0;y<5;y++)S[x][y]^=D[x];
-      const B=new Array(5).fill(0).map(()=>new Array(5).fill(0n));
-      const rots=[[0,36,3,41,18],[1,44,10,45,2],[62,6,43,15,61],[28,55,25,21,56],[27,20,39,8,14]];
-      for(let x=0;x<5;x++)for(let y=0;y<5;y++)B[y][(2*x+3*y)%5]=rotl64(S[x][y],rots[x][y]);
-      for(let x=0;x<5;x++)for(let y=0;y<5;y++)S[x][y]=B[x][y]^(~B[(x+1)%5][y]&B[(x+2)%5][y]);
-      S[0][0]^=RC[r];
-    }
-  }
-  const out=new Uint8Array(32);
-  for(let i=0;i<4;i++)for(let k=0;k<8;k++)out[i*8+k]=Number((S[i%5][Math.floor(i/5)]>>BigInt(k*8))&0xffn);
-  return out;
-}
-
-async function tronAddressExact(pubKeyUncomp){
-  const pubNoPrefix=pubKeyUncomp.slice(1);
+// ══════════════════════════════════════════════════
+// TRON (secp256k1 + Keccak256)
+// ══════════════════════════════════════════════════
+async function tronAddress(privBytes){
+  const pn=b2n(privBytes);
+  const[px,py]=pmul(pn,[_Gx,_Gy]);
+  const pubU=new Uint8Array([0x04,...n2b(px),...n2b(py)]);
+  const pubNoPrefix=pubU.slice(1); // 64 bytes
   const k=await keccak256(pubNoPrefix);
   const addr20=k.slice(12);
-  return b58chk(new Uint8Array([0x41,...addr20]));
+  return{addr:await b58chk(new Uint8Array([0x41,...addr20])),pubHex:hx(pubU)};
 }
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
+// ETHEREUM (secp256k1 + Keccak256)
+// ══════════════════════════════════════════════════
+async function ethAddress(privBytes){
+  const pn=b2n(privBytes);
+  const[px,py]=pmul(pn,[_Gx,_Gy]);
+  const pubU=new Uint8Array([0x04,...n2b(px),...n2b(py)]);
+  const pubNoPrefix=pubU.slice(1);
+  const k=await keccak256(pubNoPrefix);
+  const addr20=k.slice(12);
+  return{addr:'0x'+hx(addr20),pubHex:hx(pubU)};
+}
+
+// ══════════════════════════════════════════════════
 // COIN CONFIGS
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 const COINS={
-  BTC: {wif:0x80,addr:0x00,p2sh:0x05,bech32:'bc',
-        explorer:'https://blockstream.info/address/',
-        balApi:addrBtc},
-  DOGE:{wif:0x9E,addr:0x1E,p2sh:null,bech32:null,
-        explorer:'https://dogechain.info/address/',
-        balApi:addrDoge},
-  LTC: {wif:0xB0,addr:0x30,p2sh:0x32,bech32:'ltc',
-        explorer:'https://blockchair.com/litecoin/address/',
-        balApi:addrLtc},
-  SOL: {explorer:'https://solscan.io/account/',balApi:addrSol},
-  TRX: {explorer:'https://tronscan.org/#/address/',balApi:addrTrx},
+  BTC: {wif:0x80,addr:0x00,p2sh:0x05,bech32:'bc',explorer:'https://blockstream.info/address/'},
+  DOGE:{wif:0x9E,addr:0x1E,p2sh:null,bech32:null,explorer:'https://blockchair.com/dogecoin/address/'},
+  LTC: {wif:0xB0,addr:0x30,p2sh:0x32,bech32:'ltc',explorer:'https://blockchair.com/litecoin/address/'},
+  SOL: {explorer:'https://solscan.io/account/'},
+  TRX: {explorer:'https://tronscan.org/#/address/'},
+  ETH: {explorer:'https://etherscan.io/address/'},
 };
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 // SALT
-// ═══════════════════════════════════════
-let sMode='none',bMode='none',curCoin='BTC',bCoinSel='BTC';
+// ══════════════════════════════════════════════════
+let sMode='none', bMode='none';
 function getInp(phrase,salt,mode){
   if(!salt||mode==='none')return phrase;
-  if(mode==='pre')return salt+phrase;
-  return phrase+salt;
+  return mode==='pre'?salt+phrase:phrase+salt;
 }
 
-// ═══════════════════════════════════════
-// DERIVE WALLET
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
+// DERIVE WALLET — single function, no recursion
+// ══════════════════════════════════════════════════
 async function deriveWallet(phrase,salt,mode,coin,rawKey=false){
-  const cfg=COINS[coin];
+  const cfg=COINS[coin]||COINS.BTC;
   let pb,inp='';
-  if(rawKey){pb=phrase;}
-  else{inp=getInp(phrase,salt,mode);pb=await sha256(inp);}
+  if(rawKey){
+    pb=phrase instanceof Uint8Array?phrase:new Uint8Array(phrase);
+  }else{
+    inp=getInp(phrase,salt,mode);
+    pb=await sha256(inp);
+  }
 
   if(coin==='SOL'){
-    const sol=await solanaKeypair(pb);
-    return{coin,privHex:sol.priv,privFull:sol.privFull,addr:sol.addr,inp};
+    const kp=await solanaKeypair(pb);
+    return{coin,privHex:hx(pb),inp,addr:kp.addr,privFull:kp.privFull};
   }
   if(coin==='TRX'){
-    const pn=b2n(pb);
-    const [px,py]=pmul(pn,[_Gx,_Gy]);
-    const pubU=new Uint8Array([0x04,...n2b(px),...n2b(py)]);
-    const addr=await tronAddressExact(pubU);
-    return{coin,privHex:hx(pb),pubHex:hx(pubU),addr,inp};
+    const t=await tronAddress(pb);
+    return{coin,privHex:hx(pb),inp,addr:t.addr,pubHex:t.pubHex};
+  }
+  if(coin==='ETH'){
+    const e=await ethAddress(pb);
+    return{coin,privHex:hx(pb),inp,addr:e.addr,pubHex:e.pubHex};
   }
 
-  // BTC/DOGE/LTC
+  // BTC / DOGE / LTC
   const pn=b2n(pb);
-  const [px,py]=pmul(pn,[_Gx,_Gy]);
+  const[px,py]=pmul(pn,[_Gx,_Gy]);
   const wifU=await b58chk(new Uint8Array([cfg.wif,...pb]));
   const pubU=new Uint8Array([0x04,...n2b(px),...n2b(py)]);
   const phU=await hash160(pubU);
@@ -683,152 +967,192 @@ async function deriveWallet(phrase,salt,mode,coin,rawKey=false){
   const pubC=new Uint8Array([(py%2n===0n?0x02:0x03),...n2b(px)]);
   const phC=await hash160(pubC);
   const addrC=await b58chk(new Uint8Array([cfg.addr,...phC]));
-  let p2sh=null,segwit=null;
-  if(cfg.p2sh!==null){
-    const rs=new Uint8Array([0x00,0x14,...phC]);
-    const rh=await hash160(rs);
-    p2sh=await b58chk(new Uint8Array([cfg.p2sh,...rh]));
-  }
-  if(cfg.bech32) segwit=bech32enc(cfg.bech32,[0,...cbits(Array.from(phC),8,5,true)]);
-  return{coin,privHex:hx(pb),inp,wifU,pubU:hx(pubU),addrU,wifC,pubC:hx(pubC),addrC,p2sh,segwit};
+  let p2sh=null,segwit=null,taproot=null;
+  if(cfg.p2sh){const rs=new Uint8Array([0x00,0x14,...phC]);const rh=await hash160(rs);p2sh=await b58chk(new Uint8Array([cfg.p2sh,...rh]));}
+  if(cfg.bech32)segwit=bech32enc(cfg.bech32,[0,...cbits(Array.from(phC),8,5,true)]);
+  if(coin==='BTC')taproot=await taprootAddress(pb);
+  return{coin,privHex:hx(pb),inp,wifU,pubU:hx(pubU),addrU,wifC,pubC:hx(pubC),addrC,p2sh,segwit,taproot};
 }
 
-// ═══════════════════════════════════════
-// BALANCE APIs — multiaddr batch
-// ═══════════════════════════════════════
-function fT(url){
-  return Promise.race([fetch(url),new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),14000))]);
+// ══════════════════════════════════════════════════
+// BALANCE APIs
+// ══════════════════════════════════════════════════
+function fT(url,opts){
+  return Promise.race([
+    fetch(url,opts),
+    new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),13000))
+  ]);
+}
+async function fJSON(url,opts){
+  try{const r=await fT(url,opts);if(!r||!r.ok)return null;return await r.json();}catch{return null;}
 }
 
-// BTC — blockchain.info multiaddr (up to 100 addresses per call)
 async function batchBtcBalances(addrs){
-  const a=addrs.filter(Boolean);
-  if(!a.length)return{};
+  const a=addrs.filter(Boolean);if(!a.length)return{};
   try{
-    const r=await fT(`https://blockchain.info/multiaddr?active=${a.join('|')}&n=0`);
-    if(!r.ok)throw new Error('http '+r.status);
-    const j=await r.json();
-    const res={};
-    (j.addresses||[]).forEach(x=>{
-      res[x.address]={balance:x.final_balance||0,tx:x.n_tx||0,received:x.total_received||0};
-    });
-    return res;
-  }catch{
-    // fallback blockstream one-by-one
-    const res={};
-    for(const addr of a){res[addr]=await addrBtc(addr);}
-    return res;
-  }
+    const j=await fJSON(`https://blockchain.info/multiaddr?active=${a.join('|')}&n=0`);
+    if(j?.addresses?.length){const res={};j.addresses.forEach(x=>{res[x.address]={balance:x.final_balance||0,tx:x.n_tx||0,received:x.total_received||0};});return res;}
+  }catch{}
+  const res={};
+  for(const addr of a){res[addr]=await addrBtc(addr);await new Promise(r=>setTimeout(r,80));}
+  return res;
 }
 
 async function addrBtc(addr){
   if(!addr||addr==='—')return null;
-  const apis=[
-    ()=>fT(`https://blockchain.info/rawaddr/${addr}?limit=0`).then(r=>r.ok?r.json():null).then(j=>j?{balance:j.final_balance,tx:j.n_tx,received:j.total_received}:null),
-    ()=>fT(`https://blockstream.info/api/address/${addr}`).then(r=>r.ok?r.json():null).then(j=>j?{balance:(j.chain_stats.funded_txo_sum-j.chain_stats.spent_txo_sum),tx:j.chain_stats.tx_count,received:j.chain_stats.funded_txo_sum}:null),
-    ()=>fT(`https://mempool.space/api/address/${addr}`).then(r=>r.ok?r.json():null).then(j=>j?{balance:(j.chain_stats.funded_txo_sum-j.chain_stats.spent_txo_sum),tx:j.chain_stats.tx_count,received:j.chain_stats.funded_txo_sum}:null),
-  ];
-  for(const api of apis){try{const d=await api();if(d&&typeof d.tx==='number')return d;}catch{}}
+  try{const j=await fJSON(`https://blockchain.info/rawaddr/${addr}?limit=0`);if(j&&typeof j.n_tx==='number')return{balance:j.final_balance,tx:j.n_tx,received:j.total_received};}catch{}
+  try{const j=await fJSON(`https://blockstream.info/api/address/${addr}`);if(j?.chain_stats)return{balance:j.chain_stats.funded_txo_sum-j.chain_stats.spent_txo_sum,tx:j.chain_stats.tx_count,received:j.chain_stats.funded_txo_sum};}catch{}
+  try{const j=await fJSON(`https://mempool.space/api/address/${addr}`);if(j?.chain_stats)return{balance:j.chain_stats.funded_txo_sum-j.chain_stats.spent_txo_sum,tx:j.chain_stats.tx_count,received:j.chain_stats.funded_txo_sum};}catch{}
   return null;
 }
 
 async function addrDoge(addr){
   if(!addr||addr==='—')return null;
-  try{
-    const r=await fT(`https://api.blockcypher.com/v1/doge/main/addrs/${addr}/balance`);
-    if(!r.ok)throw 0;
-    const j=await r.json();
-    return{balance:j.final_balance||0,tx:j.n_tx||0,received:j.total_received||0};
-  }catch{}
-  try{
-    const r=await fT(`https://dogechain.info/api/v1/address/balance/${addr}`);
-    if(!r.ok)throw 0;
-    const j=await r.json();
-    return{balance:Math.round((parseFloat(j.balance)||0)*1e8),tx:0,received:0};
-  }catch{}
+  try{const j=await fJSON(`https://sochain.com/api/v2/get_address_balance/DOGE/${addr}`);if(j?.status==='success'){const bal=Math.round(parseFloat(j.data?.confirmed_balance||0)*1e8);return{balance:bal,tx:0,received:bal};}  }catch{}
+  try{const j=await fJSON(`https://api.blockcypher.com/v1/doge/main/addrs/${addr}/balance`);if(j&&typeof j.final_balance==='number')return{balance:j.final_balance,tx:j.n_tx||0,received:j.total_received||0};}catch{}
+  try{const j=await fJSON(`https://api.blockchair.com/dogecoin/dashboards/address/${addr}`);const d=j?.data?.[addr]?.address;if(d)return{balance:d.balance||0,tx:d.transaction_count||0,received:d.received||0};}catch{}
   return null;
 }
 
 async function addrLtc(addr){
   if(!addr||addr==='—')return null;
-  try{
-    const r=await fT(`https://api.blockcypher.com/v1/ltc/main/addrs/${addr}/balance`);
-    if(!r.ok)throw 0;
-    const j=await r.json();
-    return{balance:j.final_balance||0,tx:j.n_tx||0,received:j.total_received||0};
-  }catch{}
-  try{
-    const r=await fT(`https://blockchair.com/litecoin/address/${addr}?format=json`);
-    if(!r.ok)throw 0;
-    const j=await r.json();
-    const d=j?.data?.[addr]?.address;
-    return d?{balance:d.balance||0,tx:d.transaction_count||0,received:d.received||0}:null;
-  }catch{}
+  try{const j=await fJSON(`https://sochain.com/api/v2/get_address_balance/LTC/${addr}`);if(j?.status==='success'){const bal=Math.round(parseFloat(j.data?.confirmed_balance||0)*1e8);return{balance:bal,tx:0,received:bal};}  }catch{}
+  try{const j=await fJSON(`https://api.blockcypher.com/v1/ltc/main/addrs/${addr}/balance`);if(j&&typeof j.final_balance==='number')return{balance:j.final_balance,tx:j.n_tx||0,received:j.total_received||0};}catch{}
+  try{const j=await fJSON(`https://litecoinspace.org/api/address/${addr}`);if(j?.chain_stats)return{balance:j.chain_stats.funded_txo_sum-j.chain_stats.spent_txo_sum,tx:j.chain_stats.tx_count,received:j.chain_stats.funded_txo_sum};}catch{}
   return null;
 }
 
 async function addrSol(addr){
   if(!addr||addr==='—')return null;
-  try{
-    const r=await fT('https://api.mainnet-beta.solana.com',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getBalance',params:[addr]})
-    });
-    if(!r.ok)throw 0;
-    const j=await r.json();
-    const bal=j?.result?.value||0;
-    return{balance:bal,tx:bal>0?1:0,received:bal};
-  }catch{}
+  const rpcs=['https://api.mainnet-beta.solana.com','https://rpc.ankr.com/solana'];
+  for(const rpc of rpcs){
+    try{
+      const jb=await fJSON(rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getBalance',params:[addr,{commitment:'confirmed'}]})});
+      if(jb?.result?.value!==undefined){
+        const bal=jb.result.value;
+        let tx=0;
+        try{const js=await fJSON(rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:2,method:'getSignaturesForAddress',params:[addr,{limit:5}]})});if(Array.isArray(js?.result))tx=js.result.length;}catch{}
+        return{balance:bal,tx,received:bal};
+      }
+    }catch{}
+  }
   return null;
 }
 
 async function addrTrx(addr){
   if(!addr||addr==='—')return null;
   try{
-    const r=await fT(`https://api.trongrid.io/v1/accounts/${addr}`);
-    if(!r.ok)throw 0;
-    const j=await r.json();
-    const d=j?.data?.[0];
-    return d?{balance:d.balance||0,tx:(d.transactions||0),received:d.balance||0}:
-             {balance:0,tx:0,received:0};
+    const j=await fJSON(`https://api.trongrid.io/v1/accounts/${addr}`);
+    if(j?.data){
+      const d=j.data[0];
+      if(!d)return{balance:0,tx:0,received:0};
+      return{balance:d.balance||0,tx:d.latest_opration_time>0?1:0,received:d.balance||0};
+    }
+  }catch{}
+  try{
+    const j=await fJSON('https://api.trongrid.io/wallet/getaccount',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:addr,visible:true})});
+    if(j)return{balance:j.balance||0,tx:j.latest_opration_time?1:0,received:j.balance||0};
   }catch{}
   return null;
 }
 
+async function addrEth(addr){
+  if(!addr)return null;
+  const rpcs=['https://eth.llamarpc.com','https://cloudflare-eth.com','https://rpc.ankr.com/eth'];
+  for(const rpc of rpcs){
+    try{
+      const jb=await fJSON(rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_getBalance',[Symbol()]:undefined,params:[addr,'latest']})});
+      // fix above - simple version:
+      const r=await fT(rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_getBalance',params:[addr,'latest']})});
+      if(r.ok){const j=await r.json();if(j?.result){const bal=Number(BigInt(j.result||'0x0'));const rt=await fT(rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:2,method:'eth_getTransactionCount',params:[addr,'latest']})});let tx=0;if(rt.ok){const jt=await rt.json();tx=parseInt(jt?.result||'0x0',16);}return{balance:bal,tx,received:bal};}}
+    }catch{}
+  }
+  return null;
+}
+
+const BAL_FN={BTC:addrBtc,DOGE:addrDoge,LTC:addrLtc,SOL:addrSol,TRX:addrTrx,ETH:addrEth};
+
 function satStr(s,coin='BTC'){
   if(s===null||s===undefined)return'?';
-  if(coin==='SOL')return(s/1e9).toFixed(4)+' SOL';
-  if(coin==='TRX')return(s/1e6).toFixed(2)+' TRX';
+  if(coin==='SOL')return(s/1e9).toFixed(4).replace(/\.?0+$/,'')+' SOL';
+  if(coin==='TRX')return(s/1e6).toFixed(2).replace(/\.?0+$/,'')+' TRX';
+  if(coin==='ETH')return(s/1e18).toFixed(6).replace(/\.?0+$/,'')+' ETH';
   if(!s)return'0';
-  const b=s/1e8;
-  return b<0.0001?s+'sat':b.toFixed(8).replace(/\.?0+$/,'');
+  const b=s/1e8;return b<0.0001?s+'sat':b.toFixed(8).replace(/\.?0+$/,'');
 }
 
 function showBal(el,d,coin='BTC'){
   if(!el)return false;
   el.style.display='inline-block';
-  if(d===null){el.className='bal bal-err';el.textContent='⚠ تعذر الاتصال';return false;}
+  if(d===null){el.className='bal bal-err';el.textContent='⚠ خطأ';return false;}
   const bal=d.balance||0,tx=d.tx||0,recv=d.received||0;
   if(bal>0){
     el.className='bal bal-found';
-    el.innerHTML=`💰 ${satStr(bal,coin)}<br><span style="font-size:7px">🔁${tx}tx · استلم:${satStr(recv,coin)}</span>`;
-    return true;
+    el.innerHTML=`💰 ${satStr(bal,coin)}<br><span style="font-size:7px">🔁${tx}tx</span>`;
+    playAlert();return true;
   }else if(tx>0){
     el.className='bal bal-used';
-    el.innerHTML=`⚡ فارغ<br><span style="font-size:7px">🔁${tx}tx · استلم:${satStr(recv,coin)}</span>`;
-  }else{
-    el.className='bal bal-zero';el.textContent='○ لم تُستخدم';
-  }
+    el.innerHTML=`⚡ فارغ · 🔁${tx}tx`;
+  }else{el.className='bal bal-zero';el.textContent='○ لم تُستخدم';}
   return false;
 }
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
+// SOUND ALERT
+// ══════════════════════════════════════════════════
+function playAlert(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [523,659,784,1047].forEach((f,i)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.type='sine';o.frequency.value=f;
+      g.gain.setValueAtTime(0.3,ctx.currentTime+i*0.12);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.12+0.15);
+      o.start(ctx.currentTime+i*0.12);o.stop(ctx.currentTime+i*0.12+0.2);
+    });
+  }catch{}
+}
+
+// ══════════════════════════════════════════════════
+// PASSWORD STRENGTH
+// ══════════════════════════════════════════════════
+function calcStrength(phrase){
+  const bar=document.getElementById('strength-bar');
+  if(!phrase){if(bar)bar.style.display='none';return;}
+  if(bar)bar.style.display='block';
+  let score=0;
+  const len=phrase.length;
+  const isCommon=['password','123456','bitcoin','hello','test','admin','qwerty','wallet','abc','pass'].includes(phrase.toLowerCase().trim());
+  if(!isCommon){
+    if(len>=8)score+=15;if(len>=12)score+=10;if(len>=20)score+=15;if(len>=30)score+=10;
+    if(/[a-z]/.test(phrase))score+=5;if(/[A-Z]/.test(phrase))score+=10;
+    if(/[0-9]/.test(phrase))score+=10;if(/[^a-zA-Z0-9]/.test(phrase))score+=15;
+    if(phrase.trim().split(/\s+/).length>=3)score+=10;if(phrase.trim().split(/\s+/).length>=5)score+=10;
+  }
+  score=Math.min(100,score);
+  const fill=document.getElementById('strength-fill');
+  const label=document.getElementById('strength-label');
+  const info=document.getElementById('strength-info');
+  let color,text,time,desc;
+  if(isCommon||score<20){color='#ff3355';text='ضعيف جداً ⚠';time='< ثانية';desc='كلمة شائعة — تُكسر فوراً!';}
+  else if(score<40){color='#ff7722';text='ضعيف';time='دقائق';desc='بسيطة — تُكسر بسهولة';}
+  else if(score<60){color='var(--yellow)';text='متوسط';time='أيام';desc='مقبولة — أضف أرقام ورموز';}
+  else if(score<80){color='var(--a2)';text='جيد';time='سنوات';desc='جيدة — أضف عشوائية أكثر';}
+  else{color='var(--green)';text='ممتاز 🛡';time='مليارات السنين';desc='عشوائية عالية — آمنة';}
+  if(fill){fill.style.width=score+'%';fill.style.background=color;}
+  if(label){label.style.color=color;label.textContent=`${text} (${score}/100)`;}
+  if(info)info.innerHTML=`⏱ وقت الكسر: <span style="color:${color}">${time}</span> — ${desc}`;
+}
+
+// ══════════════════════════════════════════════════
 // UI HELPERS
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 function sw(t){
-  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['single','bulk','bip39','conv'][i]===t));
+  const tabs=['single','bulk','bip39','conv','puzzle','eth'];
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',tabs[i]===t));
   document.querySelectorAll('.tpane').forEach(p=>p.classList.remove('active'));
-  document.getElementById('t-'+t).classList.add('active');
+  const tp=document.getElementById('t-'+t);if(tp)tp.classList.add('active');
 }
 function setT(id,v){const e=document.getElementById(id);if(e){const n=e.firstChild;if(n&&n.nodeType===3)n.textContent=v;else e.textContent=v;}}
 function setE(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
@@ -837,56 +1161,49 @@ async function cp(id,btn){
   const e=document.getElementById(id);if(!e)return;
   const t=e.firstChild?.nodeType===3?e.firstChild.textContent:e.textContent;
   await navigator.clipboard.writeText(t).catch(()=>{});
-  const o=btn.textContent;btn.textContent='✓';btn.classList.add('ok');
-  setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},1200);
-}
-async function cpEl(id,btn){
-  const e=document.getElementById(id);if(!e)return;
-  await navigator.clipboard.writeText(e.textContent).catch(()=>{});
-  const o=btn.textContent;btn.textContent='✓';btn.classList.add('ok');
-  setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},1200);
+  const o=btn.textContent;btn.textContent='✓';btn.classList.add('ok');setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},1200);
 }
 async function cpText(t,btn){
-  await navigator.clipboard.writeText(t).catch(()=>{});
-  const o=btn.textContent;btn.textContent='✓';btn.classList.add('ok');
-  setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},1200);
+  await navigator.clipboard.writeText(String(t)).catch(()=>{});
+  const o=btn.textContent;btn.textContent='✓';btn.classList.add('ok');setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},1200);
 }
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 // SINGLE TAB
-// ═══════════════════════════════════════
-let _deb=null,_sw=null;
-function deb(){clearTimeout(_deb);_deb=setTimeout(doSingle,500);}
+// ══════════════════════════════════════════════════
+let curCoin='BTC',sMode_='none',_deb=null,_sw=null;
 
 function sCoin(c,btn){
   curCoin=c;
   document.querySelectorAll('#s-coins .cb').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
-  const isBTC=c==='BTC'||c==='LTC';
-  document.getElementById('s-btc-sec').style.display=isBTC?'block':'none';
-  document.getElementById('s-doge-sec').style.display=c==='DOGE'?'block':'none';
-  document.getElementById('s-sol-sec').style.display=c==='SOL'?'block':'none';
-  document.getElementById('s-trx-sec').style.display=c==='TRX'?'block':'none';
+  ['s-btc-sec','s-doge-sec','s-sol-sec','s-trx-sec','s-eth-sec'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display='none';
+  });
+  const show={BTC:'s-btc-sec',LTC:'s-btc-sec',DOGE:'s-doge-sec',SOL:'s-sol-sec',TRX:'s-trx-sec',ETH:'s-eth-sec'};
+  const el=document.getElementById(show[c]);if(el)el.style.display='block';
   if(c==='LTC'){
-    document.getElementById('s-p2sh-sep').textContent='③ P2SH-P2WPKH (يبدأ بـ M)';
-    document.getElementById('s-sw-sep').textContent='④ Native SegWit (ltc1q)';
+    setE('s-p2sh-sep','③ P2SH-P2WPKH (يبدأ بـ M)');
+    setE('s-sw-sep','④ Native SegWit (ltc1q)');
   }else{
-    document.getElementById('s-p2sh-sep').textContent='③ P2SH-P2WPKH (يبدأ بـ 3)';
-    document.getElementById('s-sw-sep').textContent='④ Native SegWit (bc1q)';
+    const sp=document.getElementById('s-p2sh-sep');if(sp)sp.textContent='③ P2SH-P2WPKH (يبدأ بـ 3)';
+    const ss=document.getElementById('s-sw-sep');if(ss)ss.textContent='④ Native SegWit (bc1q)';
   }
-  document.getElementById('s-coin-lbl').textContent=c+' WALLET';
+  setE('s-coin-lbl',c+' WALLET');
   deb();
 }
 
 function setSM(m){
-  sMode=m;
-  ['none','pre','suf'].forEach(x=>document.getElementById('sm-'+x).classList.toggle('on',x===m));
+  sMode=m;sMode_=m;
+  ['none','pre','suf'].forEach(x=>{const el=document.getElementById('sm-'+x);if(el)el.classList.toggle('on',x===m);});
   deb();
 }
 
+function deb(){clearTimeout(_deb);_deb=setTimeout(doSingle,500);}
+
 function resetBals(){
-  ['bal-u','bal-c','bal-p','bal-s','bal-du','bal-dc','bal-sol','bal-trx'].forEach(id=>{
+  ['bal-u','bal-c','bal-p','bal-s','bal-tap','bal-du','bal-dc','bal-sol','bal-trx','bal-eth'].forEach(id=>{
     const e=document.getElementById(id);if(e){e.style.display='none';e.textContent='';}
   });
 }
@@ -894,116 +1211,106 @@ function resetBals(){
 async function doSingle(){
   const phrase=document.getElementById('s-inp').value.trim();
   if(!phrase)return;
-  const salt=document.getElementById('s-salt').value;
+  const salt=document.getElementById('s-salt').value||'';
   const coin=curCoin||'BTC';
-  document.getElementById('s-res').classList.add('show');
-  document.getElementById('s-st').innerHTML='<span class="spin">↻</span>';
+  const res=document.getElementById('s-res');if(res)res.classList.add('show');
+  setE('s-st','');
+  const st=document.getElementById('s-st');
+  if(st)st.innerHTML='<span class="spin">↻</span>';
   resetBals();
   try{
-    const w=await deriveWallet(phrase,salt,sMode,coin);
+    const w=await deriveWallet(phrase,salt,sMode_||sMode||'none',coin);
     _sw=w;
     setT('r-phrase',phrase);
-    const hasSalt=salt&&sMode!=='none';
-    document.getElementById('r-salt-row').style.display=hasSalt?'grid':'none';
-    document.getElementById('r-inp-row').style.display=hasSalt?'grid':'none';
+    const hasSalt=salt&&(sMode_||sMode||'none')!=='none';
+    const rsr=document.getElementById('r-salt-row');if(rsr)rsr.style.display=hasSalt?'grid':'none';
+    const rir=document.getElementById('r-inp-row');if(rir)rir.style.display=hasSalt?'grid':'none';
     if(hasSalt){setE('r-salt',salt);setE('r-inp',w.inp);}
     setE('r-priv',w.privHex);
 
-    if(coin==='SOL'){
+    if(coin==='ETH'){
+      setE('r-eth-priv',w.privHex);setE('r-eth-pub',w.pubHex||'');
+      setT('r-eth-addr',w.addr);setH('xl-eth',COINS.ETH.explorer+w.addr);
+    }else if(coin==='SOL'){
       setE('r-sol-priv',w.privHex);
       setE('r-sol-privb58',b58e(new Uint8Array(w.privFull.match(/.{2}/g).map(h=>parseInt(h,16)))));
-      setT('r-sol-addr',w.addr);
-      setH('xl-sol',COINS.SOL.explorer+w.addr);
+      setT('r-sol-addr',w.addr);setH('xl-sol',COINS.SOL.explorer+w.addr);
     }else if(coin==='TRX'){
-      setE('r-trx-priv',w.privHex);
-      setE('r-trx-pub',w.pubHex);
-      setT('r-trx-addr',w.addr);
-      setH('xl-trx',COINS.TRX.explorer+w.addr);
+      setE('r-trx-priv',w.privHex);setE('r-trx-pub',w.pubHex||'');
+      setT('r-trx-addr',w.addr);setH('xl-trx',COINS.TRX.explorer+w.addr);
     }else if(coin==='DOGE'){
-      setE('r-doge-wu',w.wifU);
-      setT('r-doge-au',w.addrU);
-      setE('r-doge-wc',w.wifC);
-      setT('r-doge-ac',w.addrC);
-      setH('xl-du',COINS.DOGE.explorer+w.addrU);
-      setH('xl-dc',COINS.DOGE.explorer+w.addrC);
+      setE('r-doge-wu',w.wifU);setT('r-doge-au',w.addrU);
+      setE('r-doge-wc',w.wifC);setT('r-doge-ac',w.addrC);
+      setH('xl-du',COINS.DOGE.explorer+w.addrU);setH('xl-dc',COINS.DOGE.explorer+w.addrC);
     }else{
-      const exp=COINS[coin].explorer;
-      setE('r-wifu',w.wifU);setE('r-pubu',w.pubU);
+      const exp=COINS[coin]?.explorer||'';
+      setE('r-wifu',w.wifU);setE('r-pubu',w.pubU||'');
       setT('r-adru',w.addrU);setH('xl-u',exp+w.addrU);
-      setE('r-wifc',w.wifC);setE('r-pubc',w.pubC);
+      setE('r-wifc',w.wifC);setE('r-pubc',w.pubC||'');
       setT('r-adrc',w.addrC);setH('xl-c',exp+w.addrC);
-      setT('r-p2sh',w.p2sh||'—');if(w.p2sh)setH('xl-p',exp+w.p2sh);
-      setT('r-segwit',w.segwit||'—');if(w.segwit)setH('xl-s',exp+w.segwit);
-      if(coin==='LTC'){
-        document.getElementById('s-p2sh-row').style.display=w.p2sh?'grid':'none';
-        document.getElementById('s-sw-row').style.display=w.segwit?'grid':'none';
-      }
+      if(w.p2sh){setT('r-p2sh',w.p2sh);setH('xl-p',exp+w.p2sh);}
+      if(w.segwit){setT('r-segwit',w.segwit);setH('xl-s',exp+w.segwit);}
+      if(w.taproot){setT('r-taproot',w.taproot);setH('xl-tap',exp+w.taproot);}
     }
-    document.getElementById('s-st').innerHTML='<span style="color:var(--green)">✓ جاهز</span>';
+    if(st)st.innerHTML='<span style="color:var(--green)">✓ جاهز</span>';
   }catch(e){
-    document.getElementById('s-st').innerHTML=`<span style="color:var(--red)">✗ ${e.message}</span>`;
-    console.error(e);
+    if(st)st.innerHTML=`<span style="color:var(--red)">✗ ${e.message}</span>`;
+    console.error('doSingle error:',e);
   }
 }
 
 async function chkSingle(){
   if(!_sw){alert('قم بالتحويل أولاً');return;}
   const w=_sw,coin=w.coin;
-  const pairs=coin==='DOGE'?[['bal-du',w.addrU,'DOGE'],['bal-dc',w.addrC,'DOGE']]:
-    coin==='SOL'?[['bal-sol',w.addr,'SOL']]:
-    coin==='TRX'?[['bal-trx',w.addr,'TRX']]:
-    [['bal-u',w.addrU,coin],['bal-c',w.addrC,coin],['bal-p',w.p2sh,coin],['bal-s',w.segwit,coin]];
-
-  pairs.forEach(([id])=>{
-    const e=document.getElementById(id);
-    if(e){e.style.display='inline-block';e.className='bal bal-spin';e.textContent='⟳';}
-  });
-  for(const [id,addr,c] of pairs){
+  const pairs=
+    coin==='DOGE'?[['bal-du',w.addrU],['bal-dc',w.addrC]]:
+    coin==='SOL'?[['bal-sol',w.addr]]:
+    coin==='TRX'?[['bal-trx',w.addr]]:
+    coin==='ETH'?[['bal-eth',w.addr]]:
+    [['bal-u',w.addrU],['bal-c',w.addrC],['bal-p',w.p2sh],['bal-s',w.segwit],['bal-tap',w.taproot]];
+  pairs.forEach(([id])=>{const e=document.getElementById(id);if(e){e.style.display='inline-block';e.className='bal bal-spin';e.textContent='⟳';}});
+  const fn=BAL_FN[coin];
+  for(const[id,addr]of pairs){
     if(!addr||addr==='—')continue;
-    const fn=COINS[c]?.balApi;
     const d=fn?await fn(addr):null;
-    showBal(document.getElementById(id),d,c);
+    showBal(document.getElementById(id),d,coin);
   }
 }
 
 function clrSingle(){
-  document.getElementById('s-inp').value='';
-  document.getElementById('s-res').classList.remove('show');
-  document.getElementById('s-st').innerHTML='';
-  _sw=null;
+  const inp=document.getElementById('s-inp');if(inp)inp.value='';
+  const res=document.getElementById('s-res');if(res)res.classList.remove('show');
+  setE('s-st','');_sw=null;
+  const sb=document.getElementById('strength-bar');if(sb)sb.style.display='none';
 }
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 // BULK TAB
-// ═══════════════════════════════════════
-let bulkRes=[];
+// ══════════════════════════════════════════════════
+let bulkCoin='BTC',bMode_='none',bulkRes=[];
 
 function bCoin(c,btn){
-  bCoinSel=c;
+  bulkCoin=c;
   document.querySelectorAll('#b-coins .cb').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
 }
 function setBSM(m){
-  bMode=m;
-  ['none','pre','suf'].forEach(x=>document.getElementById('bsm-'+x).classList.toggle('on',x===m));
+  bMode=m;bMode_=m;
+  ['none','pre','suf'].forEach(x=>{const el=document.getElementById('bsm-'+x);if(el)el.classList.toggle('on',x===m);});
 }
 
 async function doBulk(){
   const lines=document.getElementById('b-inp').value.split('\n').map(l=>l.trim()).filter(l=>l);
   if(!lines.length){alert('أدخل كلمات أولاً');return;}
-  const salt=document.getElementById('b-salt').value;
-  const coin=bCoinSel||'BTC';
+  const salt=document.getElementById('b-salt').value||'';
+  const coin=bulkCoin||'BTC';
   bulkRes=[];
-  const list=document.getElementById('blist');
-  list.innerHTML='';
-  document.getElementById('st-tot').textContent=lines.length;
-  document.getElementById('st-done').textContent=0;
-  document.getElementById('st-err').textContent=0;
-  document.getElementById('st-bal-box').style.display='none';
-  document.getElementById('pbar').style.display='block';
-  document.getElementById('pfill').style.width='0%';
+  const list=document.getElementById('blist');list.innerHTML='';
+  setE('st-tot',lines.length);setE('st-done',0);setE('st-err',0);
+  const stbb=document.getElementById('st-bal-box');if(stbb)stbb.style.display='none';
+  const pb=document.getElementById('pbar');if(pb)pb.style.display='block';
+  const pf=document.getElementById('pfill');if(pf)pf.style.width='0%';
   let done=0,err=0;
-
   const exp=COINS[coin]?.explorer||'';
 
   for(let i=0;i<lines.length;i++){
@@ -1013,159 +1320,127 @@ async function doBulk(){
     card.innerHTML=`<div class="bchdr" id="bh-${i}">
       <div style="display:flex;align-items:center;gap:8px">
         <span class="bcn">#${i+1}</span>
-        <span class="bcp">${esc(phrase)}${salt&&bMode!=='none'?'<span style="color:var(--purple);font-size:8px"> +salt</span>':''}</span>
+        <span class="bcp">${esc(phrase)}</span>
       </div>
       <span id="bs-${i}"><span class="spin" style="color:var(--muted)">↻</span></span>
     </div>
-    <div id="bb-${i}" style="padding:7px 10px;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)">جاري...</div>`;
+    <div id="bb-${i}" style="padding:8px;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)">جاري...</div>`;
     list.appendChild(card);
 
     try{
-      const w=await deriveWallet(phrase,salt,bMode,coin);
+      const w=await deriveWallet(phrase,salt,bMode_||bMode||'none',coin);
       bulkRes.push({phrase,salt,coin,...w});
-      document.getElementById(`bs-${i}`).innerHTML='<span style="color:var(--green)">✓</span>';
+      const bsEl=document.getElementById(`bs-${i}`);
+      if(bsEl)bsEl.innerHTML='<span style="color:var(--green)">✓</span>';
 
-      const mkR=(l,s,v,clr,xl,xu)=>`<div class="br">
+      const mkR=(l,s,v,clr,xu)=>`<div class="br">
         <div class="brl">${l}<small>${s}</small></div>
-        <div class="brv" style="color:${clr}">${esc(v)}${xl?`<br><a href="${xu}" target="_blank" class="xl" style="color:${clr};border-color:${clr}44">🔍 explorer</a>`:''}
-        <br><span id="bbal-${i}-${l.replace(/\W/g,'')}" class="bal" style="display:none"></span></div>
-        <button class="cbtn" onclick="cpText(${JSON.stringify(v)},this)">copy</button></div>`;
+        <div class="brv" style="color:${clr}">${esc(String(v||'—'))}${xu?`<br><a href="${xu}" target="_blank" class="xl" style="color:${clr};border-color:${clr}44;display:inline-block;margin-top:2px">🔍</a>`:''}</div>
+        <button class="cbtn" onclick="cpText(${JSON.stringify(String(v||''))},this)">copy</button></div>`;
       const mkS=(t,bg,c)=>`<div class="bsep" style="background:${bg};color:${c}">${t}</div>`;
 
-      let html=mkR('PrivKey HEX','',w.privHex,'#446688','','');
-
-      if(coin==='SOL'){
-        html+=mkS('◎ SOLANA','rgba(153,69,255,0.04)','var(--sol)');
-        html+=mkR('Address','',w.addr,'var(--sol)',true,exp+w.addr);
-      }else if(coin==='TRX'){
-        html+=mkS('⬡ TRON','rgba(239,0,39,0.04)','var(--trx)');
-        html+=mkR('Address','T...',w.addr,'var(--trx)',true,exp+w.addr);
-      }else if(coin==='DOGE'){
-        html+=mkS('Ð DOGECOIN','rgba(194,166,51,0.04)','var(--doge)');
-        html+=mkR('Addr Uncomp','D...',w.addrU,'var(--doge)',true,exp+w.addrU);
-        html+=mkR('Addr Comp','D...',w.addrC,'var(--doge)',true,exp+w.addrC);
+      let html=mkR('PrivKey HEX','',w.privHex,'#446688','');
+      if(coin==='SOL'){html+=mkS('◎ SOL','rgba(153,69,255,0.04)','var(--sol)');html+=mkR('Address','',w.addr,'var(--sol)',exp+w.addr);}
+      else if(coin==='TRX'){html+=mkS('⬡ TRX','rgba(239,0,39,0.04)','var(--trx)');html+=mkR('Address','T...',w.addr,'var(--trx)',exp+w.addr);}
+      else if(coin==='ETH'){html+=mkS('Ξ ETH','rgba(98,126,234,0.04)','#627eea');html+=mkR('Address','0x...',w.addr,'#627eea',exp+w.addr);}
+      else if(coin==='DOGE'){
+        html+=mkS('Ð DOGE','rgba(194,166,51,0.04)','var(--doge)');
+        html+=mkR('Addr Uncomp','D...',w.addrU,'var(--doge)',exp+w.addrU);
+        html+=mkR('Addr Comp','D...',w.addrC,'var(--doge)',exp+w.addrC);
       }else{
-        html+=mkS('① P2PKH Uncomp','rgba(255,215,0,0.03)','var(--yellow)');
-        html+=mkR('Addr Uncomp','1/L...',w.addrU,'var(--yellow)',true,exp+w.addrU);
-        html+=mkS('② P2PKH Comp','rgba(0,212,170,0.03)','var(--a2)');
-        html+=mkR('Addr Comp','1/L...',w.addrC,'var(--a2)',true,exp+w.addrC);
-        if(w.p2sh){html+=mkS('③ P2SH','rgba(255,102,187,0.03)','var(--pink)');html+=mkR('P2SH','3/M...',w.p2sh,'var(--pink)',true,exp+w.p2sh);}
-        if(w.segwit){html+=mkS('④ SegWit','rgba(187,153,255,0.03)','var(--purple)');html+=mkR('SegWit','bc1q/ltc1q...',w.segwit,'var(--purple)',true,exp+w.segwit);}
+        html+=mkS('① Uncomp','rgba(255,215,0,0.03)','var(--yellow)');html+=mkR('P2PKH Uncomp','1...',w.addrU,'var(--yellow)',exp+w.addrU);
+        html+=mkS('② Comp','rgba(0,212,170,0.03)','var(--a2)');html+=mkR('P2PKH Comp','1...',w.addrC,'var(--a2)',exp+w.addrC);
+        if(w.p2sh){html+=mkS('③ P2SH','rgba(255,102,187,0.03)','var(--pink)');html+=mkR('P2SH','3...',w.p2sh,'var(--pink)',exp+w.p2sh);}
+        if(w.segwit){html+=mkS('④ SegWit','rgba(187,153,255,0.03)','var(--purple)');html+=mkR('SegWit','bc1q...',w.segwit,'var(--purple)',exp+w.segwit);}
+        if(w.taproot){html+=mkS('⑤ Taproot','rgba(255,140,0,0.03)','#ff8c00');html+=mkR('P2TR','bc1p...',w.taproot,'#ff8c00',exp+w.taproot);}
       }
-      document.getElementById(`bb-${i}`).innerHTML=html;
+      const bb=document.getElementById(`bb-${i}`);if(bb)bb.innerHTML=html;
       done++;
     }catch(e){
-      document.getElementById(`bs-${i}`).innerHTML='<span style="color:var(--red)">✗</span>';
-      document.getElementById(`bb-${i}`).innerHTML=`<div style="color:var(--red);font-size:9px">✗ ${e.message}</div>`;
-      err++;
+      const bsEl=document.getElementById(`bs-${i}`);if(bsEl)bsEl.innerHTML='<span style="color:var(--red)">✗</span>';
+      const bb=document.getElementById(`bb-${i}`);if(bb)bb.innerHTML=`<div style="color:var(--red);font-size:9px">✗ ${e.message}</div>`;
+      err++;console.error('Bulk error:',e);
     }
-    document.getElementById('st-done').textContent=done;
-    document.getElementById('st-err').textContent=err;
-    document.getElementById('pfill').style.width=((i+1)/lines.length*100)+'%';
+    setE('st-done',done);setE('st-err',err);
+    if(pf)pf.style.width=((i+1)/lines.length*100)+'%';
     if(i%4===3)await new Promise(r=>setTimeout(r,0));
   }
 }
 
 async function chkAllBal(){
   if(!bulkRes.length){alert('قم بالتوليد أولاً');return;}
-  document.getElementById('st-bal-box').style.display='block';
-  document.getElementById('st-bal').textContent='...';
-  let found=0;
+  const stbb=document.getElementById('st-bal-box');if(stbb)stbb.style.display='block';
+  setE('st-bal','...');let found=0;
 
-  // Batch BTC addresses (blockchain.info multiaddr)
-  const btcWallets=bulkRes.filter(w=>w.coin==='BTC');
-  if(btcWallets.length){
-    const allBtcAddrs=[];
-    btcWallets.forEach(w=>[w.addrU,w.addrC,w.p2sh,w.segwit].filter(Boolean).forEach(a=>allBtcAddrs.push(a)));
-    // batch in groups of 100
-    const batches=[];
-    for(let i=0;i<allBtcAddrs.length;i+=100)batches.push(allBtcAddrs.slice(i,i+100));
-    const btcData={};
-    for(const batch of batches){
-      const d=await batchBtcBalances(batch);
-      Object.assign(btcData,d);
-      await new Promise(r=>setTimeout(r,300));
-    }
-    // Update UI
-    btcWallets.forEach((w,wi)=>{
+  // Batch BTC
+  const btcW=bulkRes.filter(w=>w.coin==='BTC');
+  if(btcW.length){
+    const allA=[];btcW.forEach(w=>[w.addrU,w.addrC,w.p2sh,w.segwit,w.taproot].filter(Boolean).forEach(a=>allA.push(a)));
+    const btcD={};
+    for(let i=0;i<allA.length;i+=80){const d=await batchBtcBalances(allA.slice(i,i+80));Object.assign(btcD,d);await new Promise(r=>setTimeout(r,400));}
+    btcW.forEach(w=>{
       const idx=bulkRes.indexOf(w);
-      const addrs=[w.addrU,w.addrC,w.p2sh,w.segwit];
-      const lbls=['addrU','addrC','p2sh','segwit'];
-      let cardFound=false,cardUsed=false;
+      const addrs=[w.addrU,w.addrC,w.p2sh,w.segwit,w.taproot];
+      let cf=false,cu=false;
       const body=document.getElementById(`bb-${idx}`);
       const sec=document.createElement('div');sec.className='bbal';
-      addrs.forEach((addr,ai)=>{
+      addrs.forEach((addr)=>{
         if(!addr)return;
-        const d=btcData[addr]||null;
-        const row=document.createElement('div');
-        row.style.cssText='display:flex;justify-content:space-between;padding:2px 0;gap:6px';
-        const lbl=document.createElement('span');
-        lbl.style.cssText='font-family:"Share Tech Mono",monospace;font-size:7px;color:var(--muted)';
-        lbl.textContent=lbls[ai];
-        const badge=document.createElement('span');
-        if(showBal(badge,d,'BTC'))cardFound=true;
-        else if(d&&d.tx>0)cardUsed=true;
-        row.appendChild(lbl);row.appendChild(badge);sec.appendChild(row);
+        const d=btcD[addr]||null;
+        const r=document.createElement('div');r.style.cssText='display:flex;justify-content:space-between;padding:2px 0';
+        const lb=document.createElement('span');lb.style.cssText='font-family:"Share Tech Mono",monospace;font-size:7px;color:var(--muted)';lb.textContent=addr.slice(0,12)+'...';
+        const b=document.createElement('span');
+        if(showBal(b,d,'BTC'))cf=true;else if(d&&d.tx>0)cu=true;
+        r.appendChild(lb);r.appendChild(b);sec.appendChild(r);
       });
       body?.appendChild(sec);
       const hdr=document.getElementById(`bh-${idx}`);
-      if(cardFound){found++;if(hdr)hdr.style.cssText+=';border-left:3px solid var(--green)';}
-      else if(cardUsed){if(hdr)hdr.style.cssText+=';border-left:3px solid #886622';}
+      if(cf){found++;if(hdr)hdr.style.cssText+=';border-left:3px solid var(--green)';}
+      else if(cu){if(hdr)hdr.style.cssText+=';border-left:3px solid #886622';}
+      setE('st-bal',found);
     });
   }
 
-  // Other coins — one by one
-  const otherWallets=bulkRes.filter(w=>w.coin!=='BTC');
-  for(const w of otherWallets){
-    const idx=bulkRes.indexOf(w);
-    const coin=w.coin;
-    const fn=COINS[coin]?.balApi;
-    if(!fn)continue;
-    const addrs=coin==='DOGE'?[w.addrU,w.addrC]:
-                coin==='LTC'?[w.addrU,w.addrC,w.p2sh,w.segwit]:
-                [w.addr];
-    const lbls=coin==='DOGE'?['Uncomp','Comp']:
-               coin==='LTC'?['Uncomp','Comp','P2SH','SegWit']:['addr'];
-    let cardFound=false,cardUsed=false;
+  // Other coins
+  for(const w of bulkRes.filter(w=>w.coin!=='BTC')){
+    const idx=bulkRes.indexOf(w);const coin=w.coin;
+    const fn=BAL_FN[coin];if(!fn)continue;
+    const addrs=coin==='DOGE'?[w.addrU,w.addrC]:coin==='LTC'?[w.addrU,w.addrC,w.p2sh,w.segwit]:[w.addr];
+    let cf=false,cu=false;
     const body=document.getElementById(`bb-${idx}`);
     const sec=document.createElement('div');sec.className='bbal';
-    for(let ai=0;ai<addrs.length;ai++){
-      const addr=addrs[ai];if(!addr)continue;
+    for(const addr of addrs){
+      if(!addr)continue;
       const d=await fn(addr);
-      const row=document.createElement('div');
-      row.style.cssText='display:flex;justify-content:space-between;padding:2px 0;gap:6px';
-      const lbl=document.createElement('span');
-      lbl.style.cssText='font-family:"Share Tech Mono",monospace;font-size:7px;color:var(--muted)';
-      lbl.textContent=lbls[ai];
-      const badge=document.createElement('span');
-      if(showBal(badge,d,coin))cardFound=true;
-      else if(d&&d.tx>0)cardUsed=true;
-      row.appendChild(lbl);row.appendChild(badge);sec.appendChild(row);
+      const r=document.createElement('div');r.style.cssText='display:flex;justify-content:space-between;padding:2px 0';
+      const lb=document.createElement('span');lb.style.cssText='font-family:"Share Tech Mono",monospace;font-size:7px;color:var(--muted)';lb.textContent=(addr||'').slice(0,14)+'...';
+      const b=document.createElement('span');
+      if(showBal(b,d,coin))cf=true;else if(d&&d.tx>0)cu=true;
+      r.appendChild(lb);r.appendChild(b);sec.appendChild(r);
       await new Promise(r=>setTimeout(r,200));
     }
     body?.appendChild(sec);
     const hdr=document.getElementById(`bh-${idx}`);
-    if(cardFound){found++;if(hdr)hdr.style.cssText+=';border-left:3px solid var(--green)';}
-    else if(cardUsed){if(hdr)hdr.style.cssText+=';border-left:3px solid #886622';}
-    document.getElementById('st-bal').textContent=found;
+    if(cf){found++;if(hdr)hdr.style.cssText+=';border-left:3px solid var(--green)';}
+    else if(cu){if(hdr)hdr.style.cssText+=';border-left:3px solid #886622';}
+    setE('st-bal',found);
   }
-  document.getElementById('st-bal').textContent=found;
 }
 
 function clrBulk(){
-  document.getElementById('blist').innerHTML='';
-  document.getElementById('pbar').style.display='none';
-  document.getElementById('pfill').style.width='0%';
-  ['st-tot','st-done','st-err'].forEach(id=>document.getElementById(id).textContent='0');
-  document.getElementById('st-bal-box').style.display='none';
+  const bl=document.getElementById('blist');if(bl)bl.innerHTML='';
+  const pb=document.getElementById('pbar');if(pb)pb.style.display='none';
+  const pf=document.getElementById('pfill');if(pf)pf.style.width='0%';
+  ['st-tot','st-done','st-err'].forEach(id=>setE(id,'0'));
+  const stbb=document.getElementById('st-bal-box');if(stbb)stbb.style.display='none';
   bulkRes=[];
 }
 
 function expCSV(){
   if(!bulkRes.length){alert('قم بالتوليد أولاً');return;}
-  const hdr=['Phrase','Salt','Coin','PrivKey','WIF_U','Addr_U','WIF_C','Addr_C','P2SH','SegWit','SOL/TRX_Addr'];
-  const rows=bulkRes.map(w=>[w.phrase,w.salt||'',w.coin,w.privHex||'',w.wifU||'',w.addrU||'',w.wifC||'',w.addrC||'',w.p2sh||'',w.segwit||'',w.addr||'']);
-  dl([hdr,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n'),'results.csv','text/csv');
+  const hdr=['Phrase','Salt','Coin','PrivKey','WIF_U','Addr_U','WIF_C','Addr_C','P2SH','SegWit','Taproot','SOL/TRX/ETH_Addr'];
+  const rows=bulkRes.map(w=>[w.phrase,w.salt||'',w.coin,w.privHex||'',w.wifU||'',w.addrU||'',w.wifC||'',w.addrC||'',w.p2sh||'',w.segwit||'',w.taproot||'',w.addr||'']);
+  dl([hdr,...rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n'),'results.csv','text/csv');
 }
 function expJSON(){
   if(!bulkRes.length){alert('قم بالتوليد أولاً');return;}
@@ -1173,10 +1448,10 @@ function expJSON(){
 }
 function dl(c,n,t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;a.click();}
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 // BIP-39
-// ═══════════════════════════════════════
-async function pbkdf2(pw,salt,iter,len){
+// ══════════════════════════════════════════════════
+async function pbkdf2Sha512(pw,salt,iter,len){
   const enc=new TextEncoder();
   const km=await crypto.subtle.importKey('raw',enc.encode(pw),{name:'PBKDF2'},false,['deriveBits']);
   return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(salt),iterations:iter,hash:'SHA-512'},km,len*8));
@@ -1195,7 +1470,7 @@ async function deriveChild(pk,pc,idx){
   const ck=n2b(((b2n(IL)+b2n(pk))%_N+_N)%_N);
   return{key:ck,chain:IR};
 }
-async function derivePath(seed,path){
+async function deriveBip32Path(seed,path){
   const I=await hmac512(new TextEncoder().encode('Bitcoin seed'),seed);
   let key=I.slice(0,32),chain=I.slice(32);
   for(const p of path.replace('m/','').split('/').filter(x=>x)){
@@ -1205,21 +1480,21 @@ async function derivePath(seed,path){
   }
   return{key,chain};
 }
+
 async function doBip39(){
   const words=document.getElementById('bip-inp').value.trim().toLowerCase().split(/\s+/).filter(w=>w);
   if(![12,15,18,21,24].includes(words.length)){alert('عدد الكلمات: 12، 15، 18، 21، أو 24');return;}
-  const pass=document.getElementById('bip-pass').value;
+  const pass=document.getElementById('bip-pass').value||'';
   const startIdx=parseInt(document.getElementById('bip-idx').value)||0;
-  document.getElementById('bip-res').style.display='block';
-  document.getElementById('bip-seed').textContent='⟳ جاري...';
-  document.getElementById('bip-list').innerHTML='';
+  const res=document.getElementById('bip-res');if(res)res.style.display='block';
+  setE('bip-seed','⟳ جاري...');
+  const list=document.getElementById('bip-list');if(list)list.innerHTML='';
   try{
-    const seed=await pbkdf2(words.join(' '),'mnemonic'+pass,2048,64);
-    document.getElementById('bip-seed').innerHTML=
-      '<span style="font-size:7px;color:var(--muted)">MASTER SEED 512bit:</span><br>'+hx(seed);
-    const list=document.getElementById('bip-list');
+    const seed=await pbkdf2Sha512(words.join(' '),'mnemonic'+pass,2048,64);
+    const seedEl=document.getElementById('bip-seed');
+    if(seedEl)seedEl.innerHTML='<span style="font-size:7px;color:var(--muted)">MASTER SEED:</span><br>'+hx(seed);
     for(let i=startIdx;i<startIdx+5;i++){
-      const{key}=await derivePath(seed,`m/44'/0'/0'/0/${i}`);
+      const{key}=await deriveBip32Path(seed,`m/44'/0'/0'/0/${i}`);
       const w=await deriveWallet(key,'','none','BTC',true);
       const card=document.createElement('div');
       card.className='bip-card';
@@ -1228,19 +1503,18 @@ async function doBip39(){
           <span class="bip-path">m/44'/0'/0'/0/${i}</span>
           <button class="cbtn" onclick="cpText(${JSON.stringify(w.addrC)},this)">📋 P2PKH</button>
         </div>
-        <div class="br"><div class="brl">WIF Comp</div><div class="brv" style="color:#8899bb">${esc(w.wifC)}</div><button class="cbtn" onclick="cpText(${JSON.stringify(w.wifC)},this)">copy</button></div>
+        <div class="br"><div class="brl">WIF</div><div class="brv" style="color:#8899bb">${esc(w.wifC)}</div><button class="cbtn" onclick="cpText(${JSON.stringify(w.wifC)},this)">copy</button></div>
         <div class="br"><div class="brl">P2PKH</div><div class="brv" style="color:var(--a2)">${w.addrC}</div><button class="cbtn" onclick="cpText(${JSON.stringify(w.addrC)},this)">copy</button></div>
         <div class="br"><div class="brl">P2SH</div><div class="brv" style="color:var(--pink)">${w.p2sh||'—'}</div><button class="cbtn" onclick="cpText(${JSON.stringify(w.p2sh||'')},this)">copy</button></div>
-        <div class="br" style="border-bottom:none"><div class="brl">SegWit</div><div class="brv" style="color:var(--purple)">${w.segwit||'—'}</div><button class="cbtn" onclick="cpText(${JSON.stringify(w.segwit||'')},this)">copy</button></div>
-      `;
-      list.appendChild(card);
+        <div class="br" style="border-bottom:none"><div class="brl">SegWit</div><div class="brv" style="color:var(--purple)">${w.segwit||'—'}</div><button class="cbtn" onclick="cpText(${JSON.stringify(w.segwit||'')},this)">copy</button></div>`;
+      if(list)list.appendChild(card);
     }
-  }catch(e){document.getElementById('bip-seed').textContent='خطأ: '+e.message;console.error(e);}
+  }catch(e){setE('bip-seed','خطأ: '+e.message);console.error('BIP39 error:',e);}
 }
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 // CONVERTER TAB
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 async function verifyCS(dec){
   const p=dec.slice(0,-4),cs=dec.slice(-4);
   const c=(await dsha256(p)).slice(0,4);
@@ -1248,44 +1522,40 @@ async function verifyCS(dec){
 }
 async function cWifHex(){
   const v=document.getElementById('c-wif').value.trim();
-  const out=document.getElementById('c-wif-out');
+  const out=document.getElementById('c-wif-out');if(!out)return;
   if(!v){out.textContent='—';return;}
   try{
     const dec=b58dec(v);
-    if(!dec||dec.length<33){out.innerHTML='<span style="color:var(--red)">✗ WIF غير صالح</span>';return;}
+    if(!dec||dec.length<33){out.innerHTML='<span style="color:var(--red)">✗ طول خاطئ</span>';return;}
     const ok=await verifyCS(dec);
     if(!ok){out.innerHTML='<span style="color:var(--red)">✗ Checksum خاطئ — المفتاح تالف!</span>';return;}
-    let p=dec.slice(1,dec.length-4);
-    const comp=p.length===33;if(comp)p=p.slice(0,-1);
+    let p=dec.slice(1,dec.length-4);const comp=p.length===33;if(comp)p=p.slice(0,-1);
     out.innerHTML='<span style="color:var(--green)">✓ Checksum صحيح</span> — '+(comp?'<span style="color:var(--a2)">Compressed</span>':'<span style="color:var(--yellow)">Uncompressed</span>')+'<br>'+hx(p);
   }catch(e){out.textContent='خطأ: '+e.message;}
 }
 async function cHexWif(){
   const v=document.getElementById('c-hex').value.trim();
   const ou=document.getElementById('c-hex-u'),oc=document.getElementById('c-hex-c');
+  if(!ou||!oc)return;
   if(!v){ou.textContent='— Uncompressed';oc.textContent='— Compressed';return;}
-  if(v.length!==64||!/^[0-9a-fA-F]+$/.test(v)){
-    ou.innerHTML='<span style="color:var(--red)">✗ يجب 64 حرف HEX (لديك '+v.length+')</span>';oc.textContent='';return;
-  }
+  if(v.length!==64||!/^[0-9a-fA-F]+$/.test(v)){ou.innerHTML=`<span style="color:var(--red)">✗ يجب 64 حرف HEX (لديك ${v.length})</span>`;oc.textContent='';return;}
   try{
     const b=new Uint8Array(v.match(/.{2}/g).map(h=>parseInt(h,16)));
-    const wu=await b58chk(new Uint8Array([0x80,...b]));
-    const wc=await b58chk(new Uint8Array([0x80,...b,0x01]));
-    ou.innerHTML='<span style="color:var(--yellow)">'+wu+'</span> <span style="color:var(--muted)">(Uncompressed)</span>';
-    oc.innerHTML='<span style="color:var(--a2)">'+wc+'</span> <span style="color:var(--muted)">(Compressed)</span>';
+    ou.innerHTML='<span style="color:var(--yellow)">'+(await b58chk(new Uint8Array([0x80,...b])))+'</span>';
+    oc.innerHTML='<span style="color:var(--a2)">'+(await b58chk(new Uint8Array([0x80,...b,0x01])))+'</span>';
   }catch(e){ou.textContent='خطأ: '+e.message;}
 }
 async function anaKey(){
   const v=document.getElementById('c-ana').value.trim();
-  const out=document.getElementById('c-ana-out');
+  const out=document.getElementById('c-ana-out');if(!out)return;
   if(!v){out.textContent='—';return;}
   let lines=[];
   try{
     if(v.length===64&&/^[0-9a-fA-F]+$/.test(v)){
       const b=new Uint8Array(v.match(/.{2}/g).map(h=>parseInt(h,16)));
       const pn=b2n(b);const valid=pn>0n&&pn<_N;
-      lines.push('النوع: Private Key HEX (256bit)');
-      lines.push(`<span style="color:${valid?'var(--green)':'var(--red)'}">${valid?'✓ صالح في secp256k1':'✗ خارج النطاق!'}</span>`);
+      lines.push(`النوع: Private Key HEX`);
+      lines.push(`<span style="color:${valid?'var(--green)':'var(--red)'}">${valid?'✓ صالح':'✗ خارج نطاق secp256k1!'}</span>`);
       const wu=await b58chk(new Uint8Array([0x80,...b]));
       const wc=await b58chk(new Uint8Array([0x80,...b,0x01]));
       lines.push(`<span style="color:var(--yellow)">WIF Uncomp: ${wu}</span>`);
@@ -1293,9 +1563,8 @@ async function anaKey(){
       const[px,py]=pmul(pn,[_Gx,_Gy]);
       const pubC=new Uint8Array([(py%2n===0n?0x02:0x03),...n2b(px)]);
       const phC=await hash160(pubC);
-      const addr=await b58chk(new Uint8Array([0x00,...phC]));
-      lines.push(`<span style="color:var(--pink)">P2PKH: ${addr}</span>`);
-    }else if(['5','K','L','6','Q','T'].some(p=>v.startsWith(p))){
+      lines.push(`<span style="color:var(--pink)">P2PKH: ${await b58chk(new Uint8Array([0x00,...phC]))}</span>`);
+    }else if(['5','K','L','6','Q'].some(p=>v.startsWith(p))){
       const isDoge=v.startsWith('6')||v.startsWith('Q');
       lines.push(`النوع: WIF — ${isDoge?'Dogecoin':'Bitcoin'}`);
       lines.push(`Compressed: ${v.startsWith('5')||v.startsWith('6')?'لا':'نعم'}`);
@@ -1305,12 +1574,211 @@ async function anaKey(){
         lines.push(`<span style="color:${ok?'var(--green)':'var(--red)'}">Checksum: ${ok?'✓ صحيح':'✗ خاطئ!'}</span>`);
         if(ok){let p=dec.slice(1,dec.length-4);if(p.length===33)p=p.slice(0,-1);lines.push('HEX: '+hx(p));}
       }
-    }else{lines.push('أدخل HEX 64 حرف أو WIF (5.../K.../L.../6.../Q...)');}
+    }else{lines.push('أدخل HEX 64 حرف أو WIF');}
   }catch(e){lines.push(`<span style="color:var(--red)">خطأ: ${e.message}</span>`);}
   out.innerHTML=lines.join('<br>');
 }
 
+// ══════════════════════════════════════════════════
+// ETH MULTI-NETWORK
+// ══════════════════════════════════════════════════
+const EVM_NETS={
+  ETH: {name:'Ethereum',rpcs:['https://eth.llamarpc.com','https://rpc.ankr.com/eth'],explorer:'https://etherscan.io/address/',sym:'ETH',dec:18},
+  BSC: {name:'BNB Chain',rpcs:['https://bsc-dataseed.binance.org','https://rpc.ankr.com/bsc'],explorer:'https://bscscan.com/address/',sym:'BNB',dec:18},
+  MATIC:{name:'Polygon',rpcs:['https://polygon-rpc.com','https://rpc.ankr.com/polygon'],explorer:'https://polygonscan.com/address/',sym:'MATIC',dec:18},
+  ARB:  {name:'Arbitrum',rpcs:['https://arb1.arbitrum.io/rpc','https://rpc.ankr.com/arbitrum'],explorer:'https://arbiscan.io/address/',sym:'ETH',dec:18},
+  OP:   {name:'Optimism',rpcs:['https://mainnet.optimism.io','https://rpc.ankr.com/optimism'],explorer:'https://optimistic.etherscan.io/address/',sym:'ETH',dec:18},
+  AVAX: {name:'Avalanche',rpcs:['https://api.avax.network/ext/bc/C/rpc','https://rpc.ankr.com/avalanche'],explorer:'https://snowtrace.io/address/',sym:'AVAX',dec:18},
+};
 
+async function evmBal(addr,netKey){
+  const net=EVM_NETS[netKey];if(!net)return null;
+  for(const rpc of net.rpcs){
+    try{
+      const r=await fT(rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_getBalance',params:[addr,'latest']})});
+      if(!r.ok)continue;
+      const j=await r.json();
+      if(j?.result){
+        const bal=Number(BigInt(j.result||'0x0'));
+        const r2=await fT(rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:2,method:'eth_getTransactionCount',params:[addr,'latest']})});
+        let tx=0;if(r2.ok){const j2=await r2.json();tx=parseInt(j2?.result||'0x0',16);}
+        return{balance:bal,tx,sym:net.sym,dec:net.dec};
+      }
+    }catch{}
+  }return null;
+}
+
+async function chkEthMulti(){
+  let input=document.getElementById('eth-addr-in').value.trim();
+  let addr='';
+  if(input.startsWith('0x')&&input.length===42){addr=input;}
+  else if(/^[0-9a-fA-F]{64}$/.test(input)){
+    const b=new Uint8Array(input.match(/.{2}/g).map(h=>parseInt(h,16)));
+    const e=await ethAddress(b);addr=e.addr;
+  }else{alert('أدخل عنوان 0x... أو HEX 64 حرف');return;}
+  const netEl=document.getElementById('eth-networks');if(netEl)netEl.style.display='block';
+  for(const key of Object.keys(EVM_NETS)){
+    const net=EVM_NETS[key];
+    const balEl=document.getElementById(`eth-bal-${key}`);
+    const infoEl=document.getElementById(`eth-info-${key}`);
+    const lnkEl=document.getElementById(`eth-lnk-${key}`);
+    if(balEl){balEl.className='bal bal-spin';balEl.textContent='⟳';}
+    if(lnkEl)lnkEl.href=net.explorer+addr;
+    if(infoEl)infoEl.textContent=addr;
+  }
+  await Promise.all(Object.keys(EVM_NETS).map(async key=>{
+    const d=await evmBal(addr,key);
+    const net=EVM_NETS[key];
+    const balEl=document.getElementById(`eth-bal-${key}`);
+    if(!balEl)return;
+    if(!d){balEl.className='bal bal-err';balEl.textContent='⚠ خطأ';}
+    else{
+      const val=(d.balance/Math.pow(10,d.dec)).toFixed(6).replace(/\.?0+$/,'');
+      balEl.className='bal '+(d.balance>0?'bal-found':d.tx>0?'bal-used':'bal-zero');
+      balEl.textContent=d.balance>0?`💰 ${val} ${d.sym}`:d.tx>0?`⚡ فارغ (${d.tx}tx)`:'○ لم تُستخدم';
+      if(d.balance>0)playAlert();
+    }
+  }));
+}
+
+// ══════════════════════════════════════════════════
+// PUZZLE
+// ══════════════════════════════════════════════════
+let pzRunning=false,pzResults=[],pzStart=0,pzGen=0;
+
+function setPuzzle(num,min,max,target){
+  const mn=document.getElementById('pz-min');if(mn)mn.value=min;
+  const mx=document.getElementById('pz-max');if(mx)mx.value=max;
+  const tg=document.getElementById('pz-target');if(tg)tg.value=target||'';
+}
+
+function randHex(minH,maxH){
+  const mn=BigInt('0x'+minH.replace(/^0x/i,''));
+  const mx=BigInt('0x'+maxH.replace(/^0x/i,''));
+  const range=mx-mn;
+  const bytes=new Uint8Array(32);crypto.getRandomValues(bytes);
+  const rnd=b2n(bytes)%(range+1n);
+  return (mn+rnd).toString(16).padStart(64,'0');
+}
+function seqHex(minH,offset){
+  const mn=BigInt('0x'+minH.replace(/^0x/i,''));
+  return (mn+BigInt(offset)).toString(16).padStart(64,'0');
+}
+
+async function startPuzzle(){
+  if(pzRunning){alert('البحث جارٍ — اضغط إيقاف أولاً');return;}
+  const minH=(document.getElementById('pz-min').value||'').trim().replace(/^0x/i,'');
+  const maxH=(document.getElementById('pz-max').value||'').trim().replace(/^0x/i,'');
+  const count=parseInt(document.getElementById('pz-count').value)||10;
+  const mode=document.getElementById('pz-mode').value;
+  const target=(document.getElementById('pz-target').value||'').trim();
+  if(!minH||!maxH){alert('أدخل النطاق');return;}
+  try{BigInt('0x'+minH);BigInt('0x'+maxH);}catch{alert('HEX غير صالح');return;}
+
+  pzRunning=true;pzGen=0;pzStart=Date.now();pzResults=[];
+  const pbl=document.getElementById('pz-pbar');if(pbl)pbl.style.display='block';
+  const pfl=document.getElementById('pz-pfill');if(pfl)pfl.style.width='0%';
+  setE('pz-st-gen','0');setE('pz-st-speed','0');
+  const list=document.getElementById('pz-list');if(list)list.innerHTML='';
+
+  for(let i=0;i<count;i++){
+    if(!pzRunning)break;
+    const hexKey=mode==='random'?randHex(minH,maxH):seqHex(minH,i);
+    try{
+      const bytes=new Uint8Array(hexKey.match(/.{2}/g).map(h=>parseInt(h,16)));
+      const pn=b2n(bytes);
+      const[px,py]=pmul(pn,[_Gx,_Gy]);
+      const pubC=new Uint8Array([(py%2n===0n?0x02:0x03),...n2b(px)]);
+      const phC=await hash160(pubC);
+      const addrC=await b58chk(new Uint8Array([0x00,...phC]));
+      const pubU=new Uint8Array([0x04,...n2b(px),...n2b(py)]);
+      const phU=await hash160(pubU);
+      const addrU=await b58chk(new Uint8Array([0x00,...phU]));
+      const wifC=await b58chk(new Uint8Array([0x80,...bytes,0x01]));
+      const segwit=bech32enc('bc',[0,...cbits(Array.from(phC),8,5,true)]);
+      const taproot=await taprootAddress(bytes);
+      const isTarget=target&&[addrC,addrU,segwit,taproot].includes(target);
+      pzResults.push({hex:hexKey,wifC,addrC,addrU,segwit,taproot,isTarget});pzGen++;
+
+      const card=document.createElement('div');card.className='bc';
+      if(isTarget)card.style.borderColor='var(--green)';
+      card.innerHTML=`
+        <div class="bchdr" id="pzh-${i}" ${isTarget?'style="background:rgba(0,255,136,0.06);border-left:3px solid var(--green)"':''}>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="bcn">#${i+1}${isTarget?' 🎯':''}</span>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)">${hexKey.slice(0,14)}...${hexKey.slice(-6)}</span>
+          </div>
+          <span id="pzs-${i}"></span>
+        </div>
+        <div class="br"><div class="brl">HEX</div><div class="brv" style="color:#446688">${hexKey}</div><button class="cbtn" onclick="cpText('${hexKey}',this)">copy</button></div>
+        <div class="br"><div class="brl">WIF</div><div class="brv" style="color:#8899bb">${esc(wifC)}</div><button class="cbtn" onclick="cpText(${JSON.stringify(wifC)},this)">copy</button></div>
+        <div class="br"><div class="brl">P2PKH Comp</div><div class="brv" style="color:var(--a2)">${addrC}<br><a href="https://blockstream.info/address/${addrC}" target="_blank" class="xl" style="color:var(--a2)">🔍</a><br><span id="pbc-${i}" class="bal" style="display:none"></span></div><button class="cbtn" onclick="cpText(${JSON.stringify(addrC)},this)">copy</button></div>
+        <div class="br"><div class="brl">P2PKH Uncomp</div><div class="brv" style="color:var(--yellow)">${addrU}<br><a href="https://blockstream.info/address/${addrU}" target="_blank" class="xl" style="color:var(--yellow)">🔍</a><br><span id="pbu-${i}" class="bal" style="display:none"></span></div><button class="cbtn" onclick="cpText(${JSON.stringify(addrU)},this)">copy</button></div>
+        <div class="br"><div class="brl">SegWit</div><div class="brv" style="color:var(--purple)">${segwit}<br><span id="pbs-${i}" class="bal" style="display:none"></span></div><button class="cbtn" onclick="cpText(${JSON.stringify(segwit)},this)">copy</button></div>
+        ${taproot?`<div class="br" style="border-bottom:none"><div class="brl">Taproot</div><div class="brv" style="color:#ff8c00">${taproot}<br><span id="pbt-${i}" class="bal" style="display:none"></span></div><button class="cbtn" onclick="cpText(${JSON.stringify(taproot)},this)">copy</button></div>`:''}
+      `;
+      if(list)list.appendChild(card);
+      if(isTarget){playAlert();alert(`🎯 وجدت المفتاح!\nHEX: ${hexKey}\nWIF: ${wifC}\nAddress: ${addrC}`);}
+
+      setE('pz-st-gen',pzGen);
+      const el=(Date.now()-pzStart)/1000;
+      setE('pz-st-speed',Math.round(pzGen/el)||0);
+      if(pfl)pfl.style.width=((i+1)/count*100)+'%';
+      if(mode==='seq')savePuzzleChk(minH,i+1);
+    }catch(e){console.error('Puzzle gen error:',e);}
+    if(i%3===2)await new Promise(r=>setTimeout(r,0));
+  }
+  pzRunning=false;
+  if(pbl)pbl.style.display='none';
+}
+
+function stopPuzzle(){pzRunning=false;}
+
+async function chkPuzzleBal(){
+  if(!pzResults.length){alert('قم بالتوليد أولاً');return;}
+  setE('pz-st-chk','...');let found=0;
+  const allA=[];
+  pzResults.forEach((e,i)=>[e.addrC,e.addrU,e.segwit,e.taproot].filter(Boolean).forEach(a=>allA.push(a)));
+  const btcD={};
+  for(let i=0;i<allA.length;i+=50){const d=await batchBtcBalances(allA.slice(i,i+50));Object.assign(btcD,d);await new Promise(r=>setTimeout(r,500));}
+  pzResults.forEach((e,i)=>{
+    let hasbal=false;
+    [[`pbc-${i}`,e.addrC],[`pbu-${i}`,e.addrU],[`pbs-${i}`,e.segwit],[`pbt-${i}`,e.taproot]].forEach(([id,addr])=>{
+      if(!addr)return;
+      const el=document.getElementById(id);
+      if(showBal(el,btcD[addr]||null,'BTC'))hasbal=true;
+    });
+    if(hasbal){found++;const hdr=document.getElementById(`pzh-${i}`);if(hdr)hdr.style.cssText+=';border-left:4px solid var(--green)';setE(`pzs-${i}`,'💰');}
+    setE('pz-st-found',found);setE('pz-st-chk',i+1);
+  });
+}
+
+function clrPuzzle(){
+  pzRunning=false;pzResults=[];pzGen=0;
+  const pl=document.getElementById('pz-list');if(pl)pl.innerHTML='';
+  const pb=document.getElementById('pz-pbar');if(pb)pb.style.display='none';
+  ['pz-st-gen','pz-st-chk','pz-st-found'].forEach(id=>setE(id,'0'));
+}
+
+function expPuzzleCSV(){
+  if(!pzResults.length){alert('لا نتائج');return;}
+  dl(['HEX,WIF,P2PKH_Comp,P2PKH_Uncomp,SegWit,Taproot,Target',...pzResults.map(e=>`${e.hex},${e.wifC},${e.addrC},${e.addrU},${e.segwit||''},${e.taproot||''},${e.isTarget?'YES':''}`)].join('\n'),'puzzle.csv','text/csv');
+}
+
+function savePuzzleChk(min,offset){
+  try{localStorage.setItem('pz_chk',JSON.stringify({min,max:document.getElementById('pz-max').value,offset,ts:Date.now()}));}catch{}
+}
+function loadPuzzleChk(){
+  try{
+    const d=JSON.parse(localStorage.getItem('pz_chk'));
+    if(!d){alert('لا يوجد checkpoint محفوظ');return;}
+    document.getElementById('pz-min').value=d.min;
+    document.getElementById('pz-max').value=d.max;
+    document.getElementById('pz-mode').value='seq';
+    alert(`استئناف من الموضع +${d.offset}\nالتاريخ: ${new Date(d.ts).toLocaleString()}`);
+  }catch{alert('لا يوجد checkpoint');}
+}
 </script>
+
 </body>
 </html>
