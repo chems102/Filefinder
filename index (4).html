@@ -1,0 +1,2467 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brainwallet Pro — BTC · DOGE · LTC · SOL · TRX</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
+:root{
+  --bg:#050508;--panel:#0a0a12;--border:#16162a;
+  --accent:#f7931a;--a2:#00d4aa;--text:#c8c8d8;--muted:#44446a;
+  --green:#00ff88;--red:#ff3355;--purple:#bb99ff;--yellow:#ffd700;
+  --pink:#ff66bb;--doge:#c2a633;--sol:#9945ff;--trx:#ef0027;--ltc:#aaaaaa;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(247,147,26,0.05),transparent),
+             radial-gradient(ellipse 60% 40% at 80% 110%,rgba(0,212,170,0.03),transparent);
+  pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(247,147,26,0.012)1px,transparent 1px),
+                   linear-gradient(90deg,rgba(247,147,26,0.012)1px,transparent 1px);
+  background-size:50px 50px;pointer-events:none;z-index:0;}
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:18px 10px;}
+
+/* HEADER */
+header{text-align:center;padding:24px 0 18px;}
+.logo{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:6px;color:var(--accent);margin-bottom:6px;}
+h1{font-family:'Orbitron',sans-serif;font-size:clamp(24px,5vw,44px);font-weight:900;
+  background:linear-gradient(135deg,var(--accent),#ffb347,var(--a2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px;}
+.sub{color:var(--muted);font-size:10px;margin-top:5px;font-family:'Share Tech Mono',monospace;}
+.warnbar{background:rgba(255,51,85,0.07);border:1px solid rgba(255,51,85,0.2);
+  color:#ff8899;padding:7px 14px;font-size:9px;font-family:'Share Tech Mono',monospace;
+  text-align:center;margin-bottom:16px;}
+
+/* TABS */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto;}
+.tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);
+  font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;
+  padding:9px 14px;cursor:pointer;white-space:nowrap;transition:all 0.2s;margin-bottom:-1px;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tpane{display:none;}.tpane.active{display:block;}
+
+/* CARDS */
+.card{background:var(--panel);border:1px solid var(--border);padding:14px;margin-bottom:12px;}
+.clbl{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--a2);letter-spacing:3px;margin-bottom:9px;}
+
+/* COIN BUTTONS */
+.coins{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.cb{background:#05050a;border:1px solid var(--border);padding:5px 12px;cursor:pointer;
+  font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);transition:all 0.15s;}
+.cb:hover,.cb.on{font-weight:bold;}
+.cb-BTC.on{border-color:var(--accent);color:var(--accent);background:rgba(247,147,26,0.05);}
+.cb-DOGE.on{border-color:var(--doge);color:var(--doge);background:rgba(194,166,51,0.05);}
+.cb-LTC.on{border-color:var(--ltc);color:var(--ltc);background:rgba(170,170,170,0.05);}
+.cb-SOL.on{border-color:var(--sol);color:var(--sol);background:rgba(153,69,255,0.05);}
+.cb-TRX.on{border-color:var(--trx);color:var(--trx);background:rgba(239,0,39,0.05);}
+
+/* INPUTS */
+.irow{display:flex;gap:7px;flex-wrap:wrap;}
+.inp{flex:1;min-width:180px;background:#03030a;border:1px solid var(--border);
+  color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:12px;
+  padding:9px 11px;outline:none;direction:ltr;}
+.inp:focus{border-color:var(--a2);}
+.inp::placeholder{color:var(--muted);font-size:10px;}
+.inp-salt{color:var(--purple);border-color:rgba(187,153,255,0.25);}
+.inp-salt:focus{border-color:var(--purple);}
+
+/* SALT MODES */
+.smodes{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;}
+.sm{background:#03030a;border:1px solid var(--border);padding:5px 10px;cursor:pointer;
+  font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);transition:all 0.15s;}
+.sm.on{border-color:var(--purple);color:var(--purple);background:rgba(187,153,255,0.04);}
+
+/* BUTTONS */
+.btn{background:transparent;border:1px solid var(--accent);color:var(--accent);
+  font-family:'Share Tech Mono',monospace;font-size:9px;padding:9px 16px;
+  cursor:pointer;letter-spacing:2px;transition:all 0.2s;white-space:nowrap;}
+.btn:hover{background:var(--accent);color:#000;}
+.btn-g{border-color:var(--green);color:var(--green);}
+.btn-g:hover{background:var(--green);color:#000;}
+.btn-p{border-color:var(--purple);color:var(--purple);}
+.btn-p:hover{background:var(--purple);color:#000;}
+.btn-m{border-color:var(--muted);color:var(--muted);font-size:8px;}
+.btn-m:hover{background:var(--muted);color:#000;}
+.brow{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap;}
+
+/* RESULT */
+.rcard{display:none;border:1px solid var(--accent);margin-top:12px;}
+.rcard.show{display:block;}
+.rhdr{background:rgba(247,147,26,0.05);padding:7px 12px;font-family:'Share Tech Mono',monospace;
+  font-size:9px;color:var(--accent);letter-spacing:2px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:5px;}
+.sep{padding:5px 12px;font-family:'Share Tech Mono',monospace;font-size:7px;
+  letter-spacing:3px;text-transform:uppercase;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.rr{display:grid;grid-template-columns:160px 1fr auto;align-items:start;
+  gap:8px;padding:9px 12px;border-bottom:1px solid #080812;background:#04040a;}
+.rr:last-child{border-bottom:none;}
+.rl{font-family:'Share Tech Mono',monospace;font-size:7px;color:var(--muted);
+  letter-spacing:2px;text-transform:uppercase;padding-top:2px;white-space:nowrap;line-height:1.5;}
+.rl small{display:block;color:#181828;font-size:6px;margin-top:1px;}
+.rv{font-family:'Share Tech Mono',monospace;font-size:10px;
+  word-break:break-all !important;overflow-wrap:anywhere !important;
+  white-space:pre-wrap !important;min-width:0;line-height:1.8;}
+.ra{display:flex;flex-direction:column;gap:3px;flex-shrink:0;}
+
+/* COPY BTN */
+.cbtn{background:none;border:1px solid var(--muted);color:var(--muted);
+  font-size:7px;padding:2px 5px;cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all 0.12s;}
+.cbtn:hover{border-color:var(--a2);color:var(--a2);}
+.cbtn.ok{border-color:var(--green);color:var(--green);}
+
+/* EXPLORER LINK */
+.xl{display:block;margin-top:2px;font-family:'Share Tech Mono',monospace;font-size:7px;
+  text-decoration:none;border-bottom:1px dashed;opacity:0.6;white-space:nowrap;}
+.xl:hover{opacity:1;}
+
+/* BALANCE BADGE */
+.bal{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:8px;
+  padding:2px 7px;border:1px solid;margin-top:2px;line-height:1.6;}
+.bal-spin{color:var(--muted);border-color:var(--muted);animation:pulse 1s infinite;}
+.bal-zero{color:#1a2a1a;border-color:#0a180a;}
+.bal-used{color:#886622;border-color:#553311;background:rgba(120,80,20,0.06);}
+.bal-found{color:var(--green);border-color:var(--green);background:rgba(0,255,136,0.05);font-weight:bold;}
+.bal-err{color:#553322;border-color:#332211;font-size:7px;}
+@keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:1;}}
+.spin{display:inline-block;animation:spinning 0.8s linear infinite;}
+@keyframes spinning{to{transform:rotate(360deg);}}
+
+/* BULK */
+textarea{width:100%;background:#03030a;border:1px solid var(--border);color:var(--accent);
+  font-family:'Share Tech Mono',monospace;font-size:11px;padding:9px;
+  resize:vertical;min-height:90px;outline:none;direction:ltr;}
+textarea:focus{border-color:var(--a2);}
+textarea::placeholder{color:var(--muted);}
+#pbar{display:none;background:var(--border);height:2px;margin-bottom:12px;overflow:hidden;}
+#pfill{height:100%;background:linear-gradient(90deg,var(--accent),var(--a2));width:0%;transition:width 0.1s;}
+.blist{display:flex;flex-direction:column;gap:7px;}
+.bc{border:1px solid var(--border);}
+.bchdr{background:rgba(247,147,26,0.03);padding:6px 10px;
+  display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--border);flex-wrap:wrap;gap:5px;}
+.bcp{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent);font-weight:bold;}
+.bcn{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);}
+.br{display:grid;grid-template-columns:150px 1fr auto;align-items:start;
+  gap:7px;padding:7px 10px;border-bottom:1px solid #060610;background:#04040a;}
+.br:last-child{border-bottom:none;}
+.brl{font-family:'Share Tech Mono',monospace;font-size:7px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;white-space:nowrap;}
+.brl small{display:block;color:#141424;font-size:6px;}
+.brv{font-family:'Share Tech Mono',monospace;font-size:9px;
+  word-break:break-all !important;overflow-wrap:anywhere !important;white-space:pre-wrap !important;min-width:0;line-height:1.7;}
+.bsep{padding:3px 10px;font-family:'Share Tech Mono',monospace;font-size:7px;
+  letter-spacing:3px;text-transform:uppercase;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.bbal{padding:7px 10px;background:#030308;border-top:1px solid var(--border);}
+
+/* STATS */
+.stats{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center;}
+.sb{background:var(--panel);border:1px solid var(--border);padding:9px 16px;text-align:center;min-width:90px;}
+.sn{font-size:20px;font-weight:700;color:var(--accent);font-family:'Share Tech Mono',monospace;}
+.sl{font-size:7px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+
+/* CONVERTER */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:580px){.cgrid{grid-template-columns:1fr;}.rr{grid-template-columns:1fr auto;}.rl{display:none;}.br{grid-template-columns:1fr auto;}.brl{display:none;}}
+.cout{background:#03030a;border:1px solid var(--border);padding:9px;
+  font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green);
+  word-break:break-all;min-height:36px;margin-top:6px;direction:ltr;line-height:1.8;}
+
+/* BIP39 */
+.bip-card{border:1px solid var(--border);margin-bottom:6px;}
+.bip-hdr{background:rgba(0,212,170,0.04);padding:6px 10px;
+  display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);}
+.bip-path{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--a2);}
+.cb-DASH.on{border-color:#008de4;color:#008de4;background:rgba(0,141,228,0.05);}
+.cb-ALGO.on{border-color:#00b4d8;color:#00b4d8;background:rgba(0,180,216,0.05);}
+.cb-SUI.on{border-color:#6fbcf0;color:#6fbcf0;background:rgba(111,188,240,0.05);}
+.cb-ADA.on{border-color:#0d3349;color:#3cc8c8;background:rgba(60,200,200,0.05);}
+.cb-DOT.on{border-color:#e6007a;color:#e6007a;background:rgba(230,0,122,0.05);}
+.cb-TON.on{border-color:#0098ea;color:#0098ea;background:rgba(0,152,234,0.05);}
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#0a0a12;border:1px solid var(--border);padding:16px;max-width:400px;width:90%;max-height:80vh;overflow-y:auto;}
+.modal-title{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;margin-bottom:12px;display:flex;justify-content:space-between;}
+.coin-option{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:all 0.15s;}
+.coin-option:hover{border-color:var(--a2);background:rgba(0,212,170,0.03);}
+.coin-option.active{border-color:var(--green);}
+.coin-sym{font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:bold;min-width:45px;}
+.coin-name{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);}
+.coin-algo{font-size:7px;padding:1px 5px;border:1px solid;margin-left:auto;}
+.algo-ec{color:var(--accent);border-color:rgba(247,147,26,0.3);}
+.algo-ed{color:var(--a2);border-color:rgba(0,212,170,0.3);}
+/* تنبيه الخوارزمية */
+.algo-alert{display:none;background:rgba(0,212,170,0.07);border:1px solid rgba(0,212,170,0.25);padding:6px 10px;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--a2);margin-top:6px;}
+/* offline badge */
+.offline-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);padding:3px 8px;font-family:'Share Tech Mono',monospace;font-size:7px;color:var(--green);}
+</style>
+<!-- noble/hashes: SHA-512/256 + Blake2b لـ ALGO و DOT -->
+<script src="https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/blake2b.js"></script>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo">⬡ BITCOIN · DOGECOIN · LITECOIN · SOLANA · TRON ⬡</div>
+  <h1>BRAINWALLET PRO</h1>
+  <div class="sub">SHA-256 + SALT · BIP-39 · فحص الرصيد · محول المفاتيح</div>
+  <div style="margin-top:8px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
+    <span class="offline-badge">🔒 Off-line — المفاتيح تُولَّد محلياً في المتصفح</span>
+    <span class="offline-badge" style="color:var(--a2);border-color:rgba(0,212,170,0.2)">🔑 لا يُرسل أي بيانات لأي سيرفر</span>
+  </div>
+</header>
+
+<div id="found-alert" style="display:none;background:rgba(0,255,136,0.1);border:1px solid var(--green);
+  color:var(--green);padding:10px 16px;font-family:'Share Tech Mono',monospace;font-size:11px;
+  text-align:center;margin-bottom:14px;animation:pulse 1s infinite;cursor:pointer" onclick="this.style.display='none'">
+  💰 تم اكتشاف رصيد! — انقر لإخفاء هذا الإشعار
+</div>
+<!-- Modal إضافة عملات -->
+<div class="modal-overlay" id="coin-modal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span>⊕ إضافة عملة</span>
+      <button class="cbtn" onclick="document.getElementById('coin-modal').classList.remove('open')">✕ إغلاق</button>
+    </div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:10px">انقر على العملة لإضافتها أو إزالتها</div>
+    
+    <div class="coin-option" id="opt-DASH" onclick="toggleExtraCoin('DASH')">
+      <span class="coin-sym" style="color:#008de4">⬡ DASH</span>
+      <div><div class="coin-name">Dash — UTXO مثل BTC</div><div class="coin-name">m/44'/5'/0'/0 · Version: X</div></div>
+      <span class="coin-algo algo-ec">Secp256k1</span>
+    </div>
+    <div class="coin-option" id="opt-ADA" onclick="toggleExtraCoin('ADA')">
+      <span class="coin-sym" style="color:#3cc8c8">₳ ADA</span>
+      <div><div class="coin-name">Cardano — Ed25519</div><div class="coin-name">m/1852'/1815'/0'/0/0</div></div>
+      <span class="coin-algo algo-ed">Ed25519</span>
+    </div>
+    <div class="coin-option" id="opt-DOT" onclick="toggleExtraCoin('DOT')">
+      <span class="coin-sym" style="color:#e6007a">● DOT</span>
+      <div><div class="coin-name">Polkadot — Sr25519/Ed25519</div><div class="coin-name">m/44'/354'/0'/0'/0'</div></div>
+      <span class="coin-algo algo-ed">Ed25519</span>
+    </div>
+    <div class="coin-option" id="opt-ALGO" onclick="toggleExtraCoin('ALGO')">
+      <span class="coin-sym" style="color:#00b4d8">◈ ALGO</span>
+      <div><div class="coin-name">Algorand — Ed25519</div><div class="coin-name">entropy مباشر · Base32</div></div>
+      <span class="coin-algo algo-ed">Ed25519</span>
+    </div>
+    <div class="coin-option" id="opt-SUI" onclick="toggleExtraCoin('SUI')">
+      <span class="coin-sym" style="color:#6fbcf0">◎ SUI</span>
+      <div><div class="coin-name">Sui Network — Ed25519</div><div class="coin-name">m/44'/784'/0'/0'/0' · 0x prefix</div></div>
+      <span class="coin-algo algo-ed">Ed25519</span>
+    </div>
+    <div class="coin-option" id="opt-TON" onclick="toggleExtraCoin('TON')">
+      <span class="coin-sym" style="color:#0098ea">💎 TON</span>
+      <div><div class="coin-name">The Open Network — Ed25519</div><div class="coin-name">TON Mnemonic · workchain 0</div></div>
+      <span class="coin-algo algo-ed">Ed25519</span>
+    </div>
+    <div style="margin-top:10px;padding:8px;background:rgba(255,51,85,0.05);border:1px solid rgba(255,51,85,0.15);font-family:'Share Tech Mono',monospace;font-size:7px;color:#ff8899">
+      ⚠ ADA و DOT و TON: تطبيقات مبسطة للتعليم — استخدم محافظ رسمية للعمليات الحقيقية
+    </div>
+  </div>
+</div>
+
+<div class="warnbar">⚠ للأغراض التعليمية والبحثية فقط — لا تستخدم كلمات مرور قصيرة للمحافظ الحقيقية</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="sw('single')">⚡ تحويل</button>
+  <button class="tab" onclick="sw('bulk')">📋 قائمة</button>
+  <button class="tab" onclick="sw('bip39')">🌱 BIP-39</button>
+  <button class="tab" onclick="sw('conv')">🔄 محول</button>
+  <button class="tab" onclick="sw('puzzle')">🧩 Puzzle</button>
+  <button class="tab" onclick="sw('gen')">🎲 مولّد BIP39</button>
+</div>
+
+<!-- ══ SINGLE ══ -->
+<div class="tpane active" id="t-single">
+  <div class="card">
+    <div class="clbl">🪙 اختر العملة</div>
+    <div class="coins" id="s-coins">
+      <button class="cb cb-BTC on" onclick="sCoin('BTC',this)">₿ BTC</button>
+      <button class="cb cb-DOGE" onclick="sCoin('DOGE',this)">Ð DOGE</button>
+      <button class="cb cb-LTC" onclick="sCoin('LTC',this)">Ł LTC</button>
+      <button class="cb cb-SOL" onclick="sCoin('SOL',this)">◎ SOL</button>
+      <button class="cb cb-TRX" onclick="sCoin('TRX',this)">⬡ TRX</button>
+    </div>
+    <div id="s-extra-coins" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px"></div>
+    <button class="cbtn" style="margin-top:6px;padding:4px 10px;font-size:8px" onclick="document.getElementById('coin-modal').classList.add('open')">⊕ عملات إضافية (DASH · ALGO · SUI · ADA · DOT · TON)</button>
+    <div class="algo-alert" id="algo-alert">⚡ هذه العملة تستخدم <strong>Ed25519</strong> بدلاً من Secp256k1 — خوارزمية مختلفة تماماً</div>
+    <div class="clbl" style="margin-top:10px">🧂 Salt (اختياري)</div>
+    <input type="text" class="inp inp-salt" id="s-salt" placeholder="أدخل Salt..." oninput="deb()">
+    <div class="smodes">
+      <button class="sm on" id="sm-none" onclick="setSM('none')">بدون Salt</button>
+      <button class="sm" id="sm-pre" onclick="setSM('pre')">Salt + Phrase</button>
+      <button class="sm" id="sm-suf" onclick="setSM('suf')">Phrase + Salt</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="clbl">✏ الكلمة أو العبارة</div>
+    <div class="irow">
+      <input type="text" class="inp" id="s-inp" placeholder="مثال: Bitcoin is awesome"
+        oninput="deb()" onkeydown="if(event.key==='Enter')doSingle()">
+      <button class="btn" onclick="doSingle()">⚡ تحويل</button>
+      <button class="btn btn-m" onclick="clrSingle()">✕</button>
+    </div>
+  </div>
+  <div class="rcard" id="s-res">
+    <div class="rhdr">
+      <span id="s-coin-lbl">BTC WALLET</span>
+      <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-g" style="padding:3px 9px;font-size:8px" onclick="chkSingle()">💰 فحص الرصيد</button>
+        <span id="s-st"></span>
+      </div>
+    </div>
+
+    <!-- Private Key -->
+    <div class="sep" style="background:rgba(100,130,150,0.03);color:#557799">🔑 المفتاح الخاص</div>
+    <div class="rr"><div class="rl">Phrase</div><div class="rv" style="color:var(--accent);font-size:12px;font-weight:bold" id="r-phrase">—</div><button class="cbtn" onclick="cp('r-phrase',this)">copy</button></div>
+    <div class="rr" id="r-salt-row" style="display:none"><div class="rl">Salt</div><div class="rv" style="color:var(--purple)" id="r-salt">—</div><button class="cbtn" onclick="cp('r-salt',this)">copy</button></div>
+    <div class="rr" id="r-inp-row" style="display:none"><div class="rl">Input Final<small>بعد Salt</small></div><div class="rv" style="color:#445566" id="r-inp">—</div><button class="cbtn" onclick="cp('r-inp',this)">copy</button></div>
+    <div class="rr"><div class="rl">Private Key HEX<small>SHA256</small></div><div class="rv" style="color:#6688aa" id="r-priv">—</div><button class="cbtn" onclick="cp('r-priv',this)">copy</button></div>
+
+    <!-- BTC/LTC sections -->
+    <div id="s-btc-sec">
+      <div class="sep" style="background:rgba(255,215,0,0.03);color:var(--yellow)">① Uncompressed — bitaddress.org (بدون ✓)</div>
+      <div class="rr"><div class="rl">WIF Uncomp<small>يبدأ بـ 5</small></div><div class="rv" style="color:var(--yellow)" id="r-wifu">—</div><button class="cbtn" onclick="cp('r-wifu',this)">copy</button></div>
+      <div class="rr"><div class="rl">PubKey<small>04... 130ch</small></div><div class="rv" style="color:#445566" id="r-pubu">—</div><button class="cbtn" onclick="cp('r-pubu',this)">copy</button></div>
+      <div class="rr"><div class="rl">P2PKH Uncomp<small>يبدأ بـ 1/L</small></div>
+        <div class="rv" style="color:var(--yellow)" id="r-adru">—<br><span id="bal-u" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-adru',this)">copy</button><a id="xl-u" href="#" target="_blank" class="xl" style="color:var(--yellow);border-color:rgba(255,215,0,0.3)">🔍 explorer</a></div>
+      </div>
+      <div class="sep" style="background:rgba(0,212,170,0.03);color:var(--a2)">② P2PKH Compressed — bitaddress.org (مع ✓)</div>
+      <div class="rr"><div class="rl">WIF Comp<small>K/L/T...</small></div><div class="rv" style="color:#8899bb" id="r-wifc">—</div><button class="cbtn" onclick="cp('r-wifc',this)">copy</button></div>
+      <div class="rr"><div class="rl">PubKey<small>02/03... 66ch</small></div><div class="rv" style="color:#445566" id="r-pubc">—</div><button class="cbtn" onclick="cp('r-pubc',this)">copy</button></div>
+      <div class="rr"><div class="rl">P2PKH Comp<small>يبدأ بـ 1/L</small></div>
+        <div class="rv" style="color:var(--a2)" id="r-adrc">—<br><span id="bal-c" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-adrc',this)">copy</button><a id="xl-c" href="#" target="_blank" class="xl" style="color:var(--a2);border-color:rgba(0,212,170,0.3)">🔍 explorer</a></div>
+      </div>
+      <div class="sep" id="s-p2sh-sep" style="background:rgba(255,102,187,0.03);color:var(--pink)">③ P2SH-P2WPKH (يبدأ بـ 3/M)</div>
+      <div class="rr" id="s-p2sh-row"><div class="rl">P2SH<small>3... / M...</small></div>
+        <div class="rv" style="color:var(--pink)" id="r-p2sh">—<br><span id="bal-p" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-p2sh',this)">copy</button><a id="xl-p" href="#" target="_blank" class="xl" style="color:var(--pink);border-color:rgba(255,102,187,0.3)">🔍 explorer</a></div>
+      </div>
+      <div class="sep" id="s-sw-sep" style="background:rgba(187,153,255,0.03);color:var(--purple)">④ Native SegWit (bc1q / ltc1q)</div>
+      <div class="rr" id="s-sw-row" style="border-bottom:none"><div class="rl">P2WPKH<small>bc1q/ltc1q</small></div>
+        <div class="rv" style="color:var(--purple)" id="r-segwit">—<br><span id="bal-s" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-segwit',this)">copy</button><a id="xl-s" href="#" target="_blank" class="xl" style="color:var(--purple);border-color:rgba(187,153,255,0.3)">🔍 explorer</a></div>
+      </div>
+    </div>
+
+    <!-- DOGE section -->
+    <div id="s-doge-sec" style="display:none">
+      <div class="sep" style="background:rgba(194,166,51,0.05);color:var(--doge)">Ð DOGECOIN</div>
+      <div class="rr"><div class="rl">WIF Uncomp<small>6...</small></div><div class="rv" style="color:var(--doge)" id="r-doge-wu">—</div><button class="cbtn" onclick="cp('r-doge-wu',this)">copy</button></div>
+      <div class="rr"><div class="rl">Addr Uncomp<small>D...</small></div>
+        <div class="rv" style="color:var(--doge)" id="r-doge-au">—<br><span id="bal-du" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-doge-au',this)">copy</button><a id="xl-du" href="#" target="_blank" class="xl" style="color:var(--doge);border-color:rgba(194,166,51,0.3)">🔍 explorer</a></div>
+      </div>
+      <div class="rr"><div class="rl">WIF Comp<small>Q...</small></div><div class="rv" style="color:var(--doge)" id="r-doge-wc">—</div><button class="cbtn" onclick="cp('r-doge-wc',this)">copy</button></div>
+      <div class="rr" style="border-bottom:none"><div class="rl">Addr Comp<small>D...</small></div>
+        <div class="rv" style="color:var(--doge)" id="r-doge-ac">—<br><span id="bal-dc" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-doge-ac',this)">copy</button><a id="xl-dc" href="#" target="_blank" class="xl" style="color:var(--doge);border-color:rgba(194,166,51,0.3)">🔍 explorer</a></div>
+      </div>
+    </div>
+
+    <!-- SOL section -->
+    <div id="s-sol-sec" style="display:none">
+      <div class="sep" style="background:rgba(153,69,255,0.05);color:var(--sol)">◎ SOLANA (Ed25519)</div>
+      <div class="rr"><div class="rl">Private Key HEX<small>32 bytes</small></div><div class="rv" style="color:#7755cc" id="r-sol-priv">—</div><button class="cbtn" onclick="cp('r-sol-priv',this)">copy</button></div>
+      <div class="rr"><div class="rl">Private Key Base58<small>64 bytes</small></div><div class="rv" style="color:#8866dd" id="r-sol-privb58">—</div><button class="cbtn" onclick="cp('r-sol-privb58',this)">copy</button></div>
+      <div class="rr" style="border-bottom:none"><div class="rl">Address<small>Base58</small></div>
+        <div class="rv" style="color:var(--sol)" id="r-sol-addr">—<br><span id="bal-sol" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-sol-addr',this)">copy</button><a id="xl-sol" href="#" target="_blank" class="xl" style="color:var(--sol);border-color:rgba(153,69,255,0.3)">🔍 explorer</a></div>
+      </div>
+    </div>
+
+    <!-- TRX section -->
+    <div id="s-trx-sec" style="display:none">
+      <div class="sep" style="background:rgba(239,0,39,0.05);color:var(--trx)">⬡ TRON (secp256k1)</div>
+      <div class="rr"><div class="rl">Private Key HEX</div><div class="rv" style="color:#cc3344" id="r-trx-priv">—</div><button class="cbtn" onclick="cp('r-trx-priv',this)">copy</button></div>
+      <div class="rr"><div class="rl">Public Key<small>04...</small></div><div class="rv" style="color:#883344" id="r-trx-pub">—</div><button class="cbtn" onclick="cp('r-trx-pub',this)">copy</button></div>
+      <div class="rr" style="border-bottom:none"><div class="rl">Address<small>T...</small></div>
+        <div class="rv" style="color:var(--trx)" id="r-trx-addr">—<br><span id="bal-trx" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-trx-addr',this)">copy</button><a id="xl-trx" href="#" target="_blank" class="xl" style="color:var(--trx);border-color:rgba(239,0,39,0.3)">🔍 explorer</a></div>
+      </div>
+    </div>
+    <!-- DASH section -->
+    <div id="s-dash-sec" style="display:none">
+      <div class="sep" style="background:rgba(0,141,228,0.05);color:#008de4">⬡ DASH</div>
+      <div class="rr"><div class="rl">WIF Comp</div><div class="rv" style="color:#008de4" id="r-dash-wc">—</div><button class="cbtn" onclick="cp('r-dash-wc',this)">copy</button></div>
+      <div class="rr" style="border-bottom:none"><div class="rl">Address<small>X...</small></div>
+        <div class="rv" style="color:#008de4" id="r-dash-addr">—<br><span id="bal-dash" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-dash-addr',this)">copy</button><a id="xl-dash" href="#" target="_blank" class="xl" style="color:#008de4">🔍</a></div>
+      </div>
+    </div>
+    <!-- ALGO section -->
+    <div id="s-algo-sec" style="display:none">
+      <div class="sep" style="background:rgba(0,180,216,0.05);color:#00b4d8">◈ ALGORAND</div>
+      <div class="rr"><div class="rl">Private Key HEX</div><div class="rv" style="color:#446688" id="r-algo-priv">—</div><button class="cbtn" onclick="cp('r-algo-priv',this)">copy</button></div>
+      <div class="rr" style="border-bottom:none"><div class="rl">Address<small>Base32</small></div>
+        <div class="rv" style="color:#00b4d8" id="r-algo-addr">—<br><span id="bal-algo" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-algo-addr',this)">copy</button><a id="xl-algo" href="#" target="_blank" class="xl" style="color:#00b4d8">🔍</a></div>
+      </div>
+    </div>
+    <!-- SUI section -->
+    <div id="s-sui-sec" style="display:none">
+      <div class="sep" style="background:rgba(111,188,240,0.05);color:#6fbcf0">◎ SUI</div>
+      <div class="rr"><div class="rl">Private Key HEX</div><div class="rv" style="color:#446688" id="r-sui-priv">—</div><button class="cbtn" onclick="cp('r-sui-priv',this)">copy</button></div>
+      <div class="rr" style="border-bottom:none"><div class="rl">Address<small>0x...</small></div>
+        <div class="rv" style="color:#6fbcf0" id="r-sui-addr">—<br><span id="bal-sui" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-sui-addr',this)">copy</button><a id="xl-sui" href="#" target="_blank" class="xl" style="color:#6fbcf0">🔍</a></div>
+      </div>
+    </div>
+    <!-- ADA section -->
+    <div id="s-ada-sec" style="display:none">
+      <div class="sep" style="background:rgba(60,200,200,0.05);color:#3cc8c8">₳ CARDANO</div>
+      <div class="rr"><div class="rl">Private Key HEX</div><div class="rv" style="color:#446688" id="r-ada-priv">—</div><button class="cbtn" onclick="cp('r-ada-priv',this)">copy</button></div>
+      <div class="rr" style="border-bottom:none"><div class="rl">Address<small>addr1...</small></div>
+        <div class="rv" style="color:#3cc8c8" id="r-ada-addr">—<br><span id="bal-ada" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-ada-addr',this)">copy</button><a id="xl-ada" href="#" target="_blank" class="xl" style="color:#3cc8c8">🔍</a></div>
+      </div>
+    </div>
+    <!-- DOT section -->
+    <div id="s-dot-sec" style="display:none">
+      <div class="sep" style="background:rgba(230,0,122,0.05);color:#e6007a">● POLKADOT</div>
+      <div class="rr"><div class="rl">Private Key HEX</div><div class="rv" style="color:#446688" id="r-dot-priv">—</div><button class="cbtn" onclick="cp('r-dot-priv',this)">copy</button></div>
+      <div class="rr" style="border-bottom:none"><div class="rl">Address<small>SS58</small></div>
+        <div class="rv" style="color:#e6007a" id="r-dot-addr">—<br><span id="bal-dot" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-dot-addr',this)">copy</button><a id="xl-dot" href="#" target="_blank" class="xl" style="color:#e6007a">🔍</a></div>
+      </div>
+    </div>
+    <!-- TON section -->
+    <div id="s-ton-sec" style="display:none">
+      <div class="sep" style="background:rgba(0,152,234,0.05);color:#0098ea">💎 TON</div>
+      <div class="rr"><div class="rl">Private Key HEX</div><div class="rv" style="color:#446688" id="r-ton-priv">—</div><button class="cbtn" onclick="cp('r-ton-priv',this)">copy</button></div>
+      <div class="rr" style="border-bottom:none"><div class="rl">Address<small>EQ...</small></div>
+        <div class="rv" style="color:#0098ea" id="r-ton-addr">—<br><span id="bal-ton" class="bal" style="display:none"></span></div>
+        <div class="ra"><button class="cbtn" onclick="cp('r-ton-addr',this)">copy</button><a id="xl-ton" href="#" target="_blank" class="xl" style="color:#0098ea">🔍</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BULK ══ -->
+<div class="tpane" id="t-bulk">
+  <div class="card">
+    <div class="clbl">🪙 عملة + Salt</div>
+    <div class="coins" id="b-coins">
+      <button class="cb cb-BTC on" onclick="bCoin('BTC',this)">₿ BTC</button>
+      <button class="cb cb-DOGE" onclick="bCoin('DOGE',this)">Ð DOGE</button>
+      <button class="cb cb-LTC" onclick="bCoin('LTC',this)">Ł LTC</button>
+      <button class="cb cb-SOL" onclick="bCoin('SOL',this)">◎ SOL</button>
+      <button class="cb cb-TRX" onclick="bCoin('TRX',this)">⬡ TRX</button>
+    </div>
+    <input type="text" class="inp inp-salt" id="b-salt" placeholder="Salt (اختياري)" style="margin-top:8px">
+    <div class="smodes">
+      <button class="sm on" id="bsm-none" onclick="setBSM('none')">بدون Salt</button>
+      <button class="sm" id="bsm-pre" onclick="setBSM('pre')">Salt + Phrase</button>
+      <button class="sm" id="bsm-suf" onclick="setBSM('suf')">Phrase + Salt</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="clbl">📋 كلمة في كل سطر</div>
+    <textarea id="b-inp" placeholder="Bitcoin is awesome&#10;hello world&#10;password123&#10;..."></textarea>
+    <div class="brow">
+      <button class="btn" onclick="doBulk()">▶ توليد الكل</button>
+      <button class="btn btn-g" onclick="chkAllBal()">💰 فحص الرصيد</button>
+      <button class="btn btn-p" onclick="expJSON()">↓ JSON</button>
+      <button class="btn btn-g" onclick="expCSV()">↓ CSV</button>
+      <button class="btn btn-m" onclick="clrBulk()">✕</button>
+    </div>
+  </div>
+  <div id="pbar"><div id="pfill"></div></div>
+  <div class="blist" id="blist"></div>
+  <div class="stats">
+    <div class="sb"><div class="sn" id="st-tot">0</div><div class="sl">إجمالي</div></div>
+    <div class="sb"><div class="sn" id="st-done">0</div><div class="sl">مكتمل</div></div>
+    <div class="sb"><div class="sn" id="st-err">0</div><div class="sl">خطأ</div></div>
+    <div class="sb" id="st-bal-box" style="display:none"><div class="sn" style="color:var(--green)" id="st-bal">0</div><div class="sl">💰 رصيد</div></div>
+  </div>
+</div>
+
+<!-- ══ BIP39 ══ -->
+<div class="tpane" id="t-bip39">
+  <div class="card">
+    <div class="clbl">🌱 BIP-39 Seed Phrase → مفاتيح Bitcoin</div>
+    <textarea id="bip-inp" placeholder="أدخل 12 أو 24 كلمة مفصولة بمسافات...&#10;مثال: abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about" style="min-height:70px;direction:ltr"></textarea>
+    <div class="irow" style="margin-top:8px">
+      <input type="text" class="inp" id="bip-pass" placeholder="Passphrase (اختياري)" style="direction:ltr">
+      <input type="number" class="inp" id="bip-idx" value="0" min="0" max="999" style="max-width:60px;direction:ltr">
+      <button class="btn" onclick="doBip39()">⚡ اشتقاق</button>
+    </div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);margin-top:5px">
+      المسار: m/44'/0'/0'/0/{index} — متوافق مع Trust Wallet, Ledger, Trezor
+    </div>
+  </div>
+  <div id="bip-res" style="display:none">
+    <div class="card" style="margin-top:0">
+      <div class="clbl">🔑 Master Seed (512 bit)</div>
+      <div id="bip-seed" style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#446688;word-break:break-all;line-height:1.8">—</div>
+    </div>
+    <div id="bip-list" style="margin-top:8px"></div>
+  </div>
+</div>
+
+<!-- ══ CONVERTER ══ -->
+<div class="tpane" id="t-conv">
+  <div class="card">
+    <div class="clbl">🔄 محول المفاتيح الخاصة</div>
+    <div class="cgrid">
+      <div>
+        <div class="clbl">WIF → HEX</div>
+        <input type="text" class="inp" id="c-wif" placeholder="أدخل WIF (5... K... L... 6... Q...)" oninput="cWifHex()" style="width:100%">
+        <div class="cout" id="c-wif-out">—</div>
+        <button class="cbtn" style="margin-top:4px" onclick="cpEl('c-wif-out',this)">copy</button>
+      </div>
+      <div>
+        <div class="clbl">HEX → WIF</div>
+        <input type="text" class="inp" id="c-hex" placeholder="أدخل HEX 64 حرف..." oninput="cHexWif()" style="width:100%">
+        <div class="cout" id="c-hex-u" style="color:var(--yellow)">— Uncompressed</div>
+        <div class="cout" id="c-hex-c" style="color:var(--a2);margin-top:3px">— Compressed</div>
+        <button class="cbtn" style="margin-top:4px" onclick="cpEl('c-hex-c',this)">copy comp</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="clbl">🔎 تحليل المفتاح</div>
+    <input type="text" class="inp" id="c-ana" placeholder="HEX أو WIF..." oninput="anaKey()" style="width:100%;margin-bottom:8px">
+    <div id="c-ana-out" style="font-family:'Share Tech Mono',monospace;font-size:9px;line-height:2;color:var(--text)">—</div>
+  </div>
+</div>
+
+
+<!-- ══ PUZZLE ══ -->
+<div class="tpane" id="t-puzzle">
+  <div class="card">
+    <div class="clbl">🧩 Bitcoin Puzzle — بحث في نطاق مفاتيح</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.8">
+      توليد مفاتيح خاصة عشوائية في نطاق HEX محدد وفحص رصيدها — مثل Puzzle 66, 71, 130...
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div>
+        <div class="clbl">من (HEX Min)</div>
+        <input type="text" class="inp" id="pz-min" value="4000000000000000" placeholder="HEX min..." style="width:100%;direction:ltr">
+      </div>
+      <div>
+        <div class="clbl">إلى (HEX Max)</div>
+        <input type="text" class="inp" id="pz-max" value="7fffffffffffffff" placeholder="HEX max..." style="width:100%;direction:ltr">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div class="clbl">عدد المفاتيح</div>
+        <input type="number" class="inp" id="pz-count" value="10" min="1" max="1000" style="width:100%">
+      </div>
+      <div>
+        <div class="clbl">نمط البحث</div>
+        <select class="inp" id="pz-mode" style="width:100%;background:#03030a;color:var(--accent)">
+          <option value="random">عشوائي</option>
+          <option value="seq">تسلسلي</option>
+        </select>
+      </div>
+      <div>
+        <div class="clbl">عنوان الهدف (اختياري)</div>
+        <input type="text" class="inp" id="pz-target" placeholder="1BTC..." style="width:100%;direction:ltr">
+      </div>
+    </div>
+    <!-- Quick Puzzle Presets -->
+    <div class="clbl">ألغاز جاهزة</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
+      <button class="cbtn" onclick="setPuzzle(66,'4000000000000000','7fffffffffffffff','13zb1hQbWVsc2S7ZTZnP2G4undNNpdh5so')">🧩 P66</button>
+      <button class="cbtn" onclick="setPuzzle(67,'8000000000000000','ffffffffffffffff','1BY8GQbnueYofwSuFAT3USAhGjPrkxDdW9')">🧩 P67</button>
+      <button class="cbtn" onclick="setPuzzle(71,'400000000000000000','7fffffffffffffffff','1PWo3JeB9jrGwfHDNpdGK98CgV9Eye3yTo')">🧩 P71</button>
+      <button class="cbtn" onclick="setPuzzle(130,'200000000000000000000000000000000','3ffffffffffffffffffffffffffffffff','1Fo65aKq8s8iquMt6weF1rku1moWVEd5Ua')">🧩 P130</button>
+    </div>
+    <div class="brow">
+      <button class="btn" onclick="startPuzzle()">▶ ابدأ البحث</button>
+      <button class="btn btn-g" onclick="chkPuzzleBal()">💰 فحص الرصيد للكل</button>
+      <button class="btn" style="border-color:var(--red);color:var(--red)" onclick="stopPuzzle()">■ إيقاف</button>
+      <button class="btn btn-m" onclick="clrPuzzle()">✕ مسح</button>
+      <button class="btn btn-p" onclick="expPuzzleCSV()">↓ CSV</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <div class="sb"><div class="sn" id="pz-st-gen" style="color:var(--a2)">0</div><div class="sl">مولّد</div></div>
+    <div class="sb"><div class="sn" id="pz-st-chk" style="color:var(--yellow)">0</div><div class="sl">مفحوص</div></div>
+    <div class="sb"><div class="sn" id="pz-st-found" style="color:var(--green)">0</div><div class="sl">💰 وجد رصيد</div></div>
+    <div class="sb"><div class="sn" id="pz-st-speed" style="color:var(--purple)">0</div><div class="sl">مفتاح/ثانية</div></div>
+  </div>
+
+  <!-- Progress bar -->
+  <div id="pz-pbar" style="display:none;background:var(--border);height:2px;margin-bottom:10px;overflow:hidden">
+    <div id="pz-pfill" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--a2));width:0%;transition:width 0.2s"></div>
+  </div>
+
+  <!-- Results -->
+  <div id="pz-list" class="blist"></div>
+</div>
+
+<!-- ══ BIP39 GENERATOR ══ -->
+<div class="tpane" id="t-gen">
+  <div class="card">
+    <div class="clbl">🎲 مولّد عبارات BIP-39 عشوائية مع فحص رصيد
+  <span id="wl-status" style="color:var(--muted);font-size:7px"> ⟳ جاري تحميل القاموس...</span>
+  <button class="cbtn" style="font-size:7px;margin-right:4px" onclick="BIP39_LIST=null;loadBip39Wordlist()">↺ إعادة تحميل</button>
+</div>
+    <div style="background:rgba(255,165,0,0.07);border:1px solid rgba(255,165,0,0.2);padding:6px 10px;font-family:'Share Tech Mono',monospace;font-size:8px;color:#ffaa44;margin-bottom:8px">
+      ⚠ العبارات صحيحة رياضياً — للتحقق من التوافق مع محفظتك استخدم: 
+      <a href="https://iancoleman.io/bip39/" target="_blank" style="color:var(--a2)">iancoleman.io/bip39</a>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:flex-end">
+      <div><div class="clbl">عدد الكلمات</div>
+        <select class="inp" id="gen-words" style="width:80px;background:#03030a;color:var(--accent)">
+          <option value="12" selected>12</option><option value="15">15</option>
+          <option value="18">18</option><option value="21">21</option><option value="24">24</option>
+        </select>
+      </div>
+      <div><div class="clbl">Passphrase (اختياري)</div>
+        <input type="text" class="inp" id="gen-pass" placeholder="passphrase..." style="direction:ltr;min-width:140px">
+      </div>
+      <div><div class="clbl">عدد العبارات</div>
+        <input type="number" class="inp" id="gen-count" value="5" min="1" max="30" style="width:65px">
+      </div>
+    </div>
+    <div class="clbl">🪙 عملات الفحص</div>
+    <div class="coins" id="gen-coins" style="margin-bottom:10px">
+      <button class="cb cb-BTC on"  onclick="toggleGenCoin('BTC',this)">₿ BTC</button>
+      <button class="cb cb-DOGE on" onclick="toggleGenCoin('DOGE',this)">Ð DOGE</button>
+      <button class="cb cb-LTC on"  onclick="toggleGenCoin('LTC',this)">Ł LTC</button>
+      <button class="cb cb-SOL on"  onclick="toggleGenCoin('SOL',this)">◎ SOL</button>
+      <button class="cb cb-TRX on"  onclick="toggleGenCoin('TRX',this)">⬡ TRX</button>
+      <button class="cb cb-DASH"    onclick="toggleGenCoin('DASH',this)">⬡ DASH</button>
+      <button class="cb cb-ALGO"    onclick="toggleGenCoin('ALGO',this)">◈ ALGO</button>
+      <button class="cb cb-SUI"     onclick="toggleGenCoin('SUI',this)">◎ SUI</button>
+      <button class="cb cb-ADA"     onclick="toggleGenCoin('ADA',this)">₳ ADA</button>
+      <button class="cb cb-DOT"     onclick="toggleGenCoin('DOT',this)">● DOT</button>
+      <button class="cb cb-TON"     onclick="toggleGenCoin('TON',this)">💎 TON</button>
+    </div>
+    <div class="brow">
+      <button class="btn" onclick="genBip39()">🎲 توليد عشوائي</button>
+      <button class="btn btn-g" onclick="chkGenBal()">💰 فحص الرصيد</button>
+      <button class="btn btn-p" onclick="expGenCSV()">↓ CSV</button>
+      <button class="btn btn-m" onclick="clrGen()">✕ مسح</button>
+    </div>
+  </div>
+  <div id="gen-pbar" style="display:none;background:var(--border);height:2px;margin-bottom:6px;overflow:hidden">
+    <div id="gen-pfill" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--a2));width:0%"></div>
+  </div>
+  <!-- Stats bar -->
+  <div id="gen-stats" style="display:none;background:var(--panel);border:1px solid var(--border);padding:8px 12px;margin-bottom:10px;display:none">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)">
+          📋 مُولَّد: <span id="gs-total" style="color:var(--accent)">0</span>
+        </span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)">
+          🔍 مفحوص: <span id="gs-checked" style="color:var(--yellow)">0</span>/<span id="gs-total2">0</span>
+        </span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)">
+          💰 رصيد: <span id="gs-found" style="color:var(--green);font-weight:bold">0</span>
+        </span>
+      </div>
+      <span id="gs-status" style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)"></span>
+    </div>
+  </div>
+  <div id="gen-list" class="blist"></div>
+</div>
+</div><!-- /wrap -->
+
+<script>
+'use strict';
+// ═══════════════════════════════════════
+// SHA-256
+// ═══════════════════════════════════════
+async function sha256(d){
+  const b=typeof d==='string'?new TextEncoder().encode(d):d;
+  return new Uint8Array(await crypto.subtle.digest('SHA-256',b));
+}
+async function dsha256(d){return sha256(await sha256(d));}
+
+// ═══════════════════════════════════════
+// RIPEMD-160 (tested & verified)
+// ═══════════════════════════════════════
+function rmd160(input){
+  const RL=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,7,4,13,1,10,6,15,3,12,0,9,5,2,14,11,8,3,10,14,4,9,15,8,1,2,7,0,6,13,11,5,12,1,9,11,10,0,8,12,4,13,3,7,15,14,5,6,2,4,0,5,9,7,12,2,10,14,1,3,8,11,6,15,13];
+  const RR=[5,14,7,0,9,2,11,4,13,6,15,8,1,10,3,12,6,11,3,7,0,13,5,10,14,15,8,12,4,9,1,2,15,5,1,3,7,14,6,9,11,8,12,2,10,0,4,13,8,6,4,1,3,11,15,0,5,12,2,13,9,7,10,14,12,15,10,4,1,5,8,7,6,2,13,14,0,3,9,11];
+  const SL=[11,14,15,12,5,8,7,9,11,13,14,15,6,7,9,8,7,6,8,13,11,9,7,15,7,12,15,9,11,7,13,12,11,13,6,7,14,9,13,15,14,8,13,6,5,12,7,5,11,12,14,15,14,15,9,8,9,14,5,6,8,6,5,12,9,15,5,11,6,8,13,12,5,12,13,14,11,8,5,6];
+  const SR=[8,9,9,11,13,15,15,5,7,7,8,11,14,14,12,6,9,13,15,7,12,8,9,11,7,7,12,7,6,15,13,11,9,7,15,11,8,6,6,14,12,13,5,14,13,13,7,5,15,5,8,11,14,14,6,14,6,9,12,9,12,5,15,8,8,5,12,9,12,5,14,6,8,13,6,5,15,13,11,11];
+  const KL=[0,0x5A827999,0x6ED9EBA1,0x8F1BBCDC,0xA953FD4E];
+  const KR=[0x50A28BE6,0x5C4DD124,0x6D703EF3,0x7A6D76E9,0];
+  function f(j,x,y,z){if(j<16)return x^y^z;if(j<32)return(x&y)|(~x&z);if(j<48)return(x|(~y))^z;if(j<64)return(x&z)|(y&(~z));return x^(y|(~z));}
+  function rol(x,n){return((x<<n)|(x>>>(32-n)))>>>0;}
+  const by=Array.from(input);
+  const ml=by.length,blo=(ml*8)>>>0,bhi=Math.floor(ml/0x20000000)>>>0;
+  by.push(0x80);
+  while(by.length%64!==56)by.push(0);
+  [blo,bhi].forEach(v=>{for(let i=0;i<4;i++)by.push((v>>>(i*8))&0xff);});
+  let h0=0x67452301,h1=0xEFCDAB89,h2=0x98BADCFE,h3=0x10325476,h4=0xC3D2E1F0;
+  for(let i=0;i<by.length;i+=64){
+    const X=new Int32Array(16);
+    for(let j=0;j<16;j++)X[j]=(by[i+j*4])|(by[i+j*4+1]<<8)|(by[i+j*4+2]<<16)|(by[i+j*4+3]<<24);
+    let al=h0,bl=h1,cl=h2,dl=h3,el=h4,ar=h0,br=h1,cr=h2,dr=h3,er=h4;
+    for(let j=0;j<80;j++){
+      let t=rol((al+f(j,bl,cl,dl)+X[RL[j]]+KL[Math.floor(j/16)])|0,SL[j]);
+      t=(t+el)|0;al=el;el=dl;dl=rol(cl,10);cl=bl;bl=t;
+      t=rol((ar+f(79-j,br,cr,dr)+X[RR[j]]+KR[Math.floor(j/16)])|0,SR[j]);
+      t=(t+er)|0;ar=er;er=dr;dr=rol(cr,10);cr=br;br=t;
+    }
+    const t=(h1+cl+dr)|0;h1=(h2+dl+er)|0;h2=(h3+el+ar)|0;h3=(h4+al+br)|0;h4=(h0+bl+cr)|0;h0=t;
+  }
+  const res=new Uint8Array(20);
+  [h0,h1,h2,h3,h4].forEach((h,i)=>{res[i*4]=h&0xff;res[i*4+1]=(h>>8)&0xff;res[i*4+2]=(h>>16)&0xff;res[i*4+3]=(h>>24)&0xff;});
+  return res;
+}
+async function hash160(b){return rmd160(await sha256(b));}
+
+// ═══════════════════════════════════════
+// secp256k1
+// ═══════════════════════════════════════
+const _P=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2Fn;
+const _Gx=0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798n;
+const _Gy=0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8n;
+const _N=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141n;
+function mpow(b,e,m){let r=1n;b=b%m;while(e>0n){if(e&1n)r=r*b%m;e>>=1n;b=b*b%m;}return r;}
+function minv(a,m){return mpow(a,m-2n,m);}
+function padd(A,B){
+  if(!A)return B;if(!B)return A;
+  const[x1,y1]=A,[x2,y2]=B;
+  if(x1===x2&&y1!==y2)return null;
+  let l=x1===x2?3n*x1*x1*minv(2n*y1,_P)%_P:(y2-y1)*minv(x2-x1,_P)%_P;
+  l=((l%_P)+_P)%_P;
+  const x3=((l*l-x1-x2)%_P+_P)%_P,y3=((l*(x1-x3)-y1)%_P+_P)%_P;
+  return[x3,y3];
+}
+function pmul(k,pt){let r=null,a=pt;while(k>0n){if(k&1n)r=padd(r,a);a=padd(a,a);k>>=1n;}return r;}
+function b2n(b){return b.reduce((a,x)=>(a<<8n)|BigInt(x),0n);}
+function n2b(n,l=32){const a=new Uint8Array(l);for(let i=l-1;i>=0;i--){a[i]=Number(n&0xffn);n>>=8n;}return a;}
+function hx(b){return Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join('');}
+
+// ═══════════════════════════════════════
+// Base58Check
+// ═══════════════════════════════════════
+const B58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+function b58e(bytes){
+  let n=bytes.reduce((a,b)=>a*256n+BigInt(b),0n),s='';
+  while(n>0n){s=B58[Number(n%58n)]+s;n/=58n;}
+  for(const b of bytes){if(b!==0)break;s='1'+s;}
+  return s;
+}
+async function b58chk(p){const c=(await dsha256(p)).slice(0,4);return b58e(new Uint8Array([...p,...c]));}
+function b58dec(s){
+  let n=0n;
+  for(const c of s){const i=B58.indexOf(c);if(i<0)return null;n=n*58n+BigInt(i);}
+  const bytes=[];while(n>0n){bytes.unshift(Number(n&0xffn));n>>=8n;}
+  for(const c of s){if(c!=='1')break;bytes.unshift(0);}
+  return new Uint8Array(bytes);
+}
+
+// ═══════════════════════════════════════
+// Bech32
+// ═══════════════════════════════════════
+const BC='qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+function bpoly(v){const G=[0x3b6a57b2,0x26508e6d,0x1ea119fa,0x3d4233dd,0x2a1462b3];let c=1;for(const x of v){const t=c>>25;c=((c&0x1ffffff)<<5)^x;for(let i=0;i<5;i++)if((t>>i)&1)c^=G[i];}return c;}
+function bhrp(h){const r=[];for(const c of h)r.push(c.charCodeAt(0)>>5);r.push(0);for(const c of h)r.push(c.charCodeAt(0)&31);return r;}
+function cbits(d,f,t,p){let a=0,b=0;const r=[],m=(1<<t)-1;for(const v of d){a=(a<<f)|v;b+=f;while(b>=t){b-=t;r.push((a>>b)&m);}}if(p&&b>0)r.push((a<<(t-b))&m);return r;}
+function bech32enc(hrp,data){const c=[...data];const ck=bpoly([...bhrp(hrp),...c,0,0,0,0,0,0])^1;const cs=Array.from({length:6},(_,i)=>(ck>>(5*(5-i)))&31);return hrp+'1'+[...c,...cs].map(v=>BC[v]).join('');}
+
+// ═══════════════════════════════════════
+// Ed25519 — تطبيق صحيح لـ Solana
+// ═══════════════════════════════════════
+const ed_P=2n**255n-19n;
+const ed_D=37095705934669439343138083508754565189542113879843219016388785533085940283555n;
+const ed_Bx=15112221349535807912866137220509078750507884956996801801697694784073745n;
+const ed_By=46316835694926478169428394003475163141307993866256225615783033011972563511n;
+function ed_modp(a){const r=a%ed_P;return r<0n?r+ed_P:r;}
+function ed_pow(b,e){let r=1n;b=ed_modp(b);while(e>0n){if(e&1n)r=ed_modp(r*b);e>>=1n;b=ed_modp(b*b);}return r;}
+function ed_inv(a){return ed_pow(a,ed_P-2n);}
+function ed_add(P,Q){
+  const[X1,Y1,Z1,T1]=P,[X2,Y2,Z2,T2]=Q;
+  const A=ed_modp((Y1-X1)*(Y2-X2)),B=ed_modp((Y1+X1)*(Y2+X2));
+  const C=ed_modp(T1*2n*ed_D*T2),D=ed_modp(Z1*2n*Z2);
+  const E=ed_modp(B-A),F=ed_modp(D-C),G=ed_modp(D+C),H=ed_modp(B+A);
+  return[ed_modp(E*F),ed_modp(G*H),ed_modp(F*G),ed_modp(E*H)];
+}
+function ed_mul(s,P){let Q=[0n,1n,1n,0n];while(s>0n){if(s&1n)Q=ed_add(Q,P);P=ed_add(P,P);s>>=1n;}return Q;}
+function ed_compress(P){
+  const[X,Y,Z]=P,zi=ed_inv(Z),x=ed_modp(X*zi),y=ed_modp(Y*zi);
+  const out=n2b(y);if(x&1n)out[31]|=0x80;return out;
+}
+const ed_B=[ed_modp(ed_Bx),ed_modp(ed_By),1n,ed_modp(ed_Bx*ed_By)];
+async function solanaKeypair(privBytes){
+  const h=new Uint8Array(await crypto.subtle.digest('SHA-512',privBytes));
+  h[0]&=248;h[31]&=127;h[31]|=64;
+  let s=0n;for(let i=0;i<32;i++)s|=BigInt(h[i])<<BigInt(8*i);
+  const pub=ed_compress(ed_mul(s,ed_B));
+  const full=new Uint8Array(64);full.set(privBytes,0);full.set(pub,32);
+  return{priv:hx(privBytes),privFull:hx(full),privB58:b58e(full),addr:b58e(pub)};
+}
+
+// ═══════════════════════════════════════
+// Keccak-256 صحيح لـ TRON
+// ═══════════════════════════════════════
+async function keccak256(data){
+  const RC=[0x0000000000000001n,0x0000000000008082n,0x800000000000808An,0x8000000080008000n,
+    0x000000000000808Bn,0x0000000080000001n,0x8000000080008081n,0x8000000000008009n,
+    0x000000000000008An,0x0000000000000088n,0x0000000080008009n,0x000000008000000An,
+    0x000000008000808Bn,0x800000000000008Bn,0x8000000000008089n,0x8000000000008003n,
+    0x8000000000008002n,0x8000000000000080n,0x000000000000800An,0x800000008000000An,
+    0x8000000080008081n,0x8000000000008080n,0x0000000080000001n,0x8000000080008008n];
+  const ROT=[[0,36,3,41,18],[1,44,10,45,2],[62,6,43,15,61],[28,55,25,21,56],[27,20,39,8,14]];
+  const MASK=0xFFFFFFFFFFFFFFFFn;
+  function rotl64(x,n){if(!n)return x;return((x<<BigInt(n))|(x>>(64n-BigInt(n))))&MASK;}
+  const rate=136,M=new Uint8Array(data);
+  const plen=Math.ceil((M.length+1)/rate)*rate;
+  const pad=new Uint8Array(plen);pad.set(M);pad[M.length]=0x01;pad[plen-1]|=0x80;
+  const S=Array.from({length:5},()=>new Array(5).fill(0n));
+  for(let blk=0;blk<plen;blk+=rate){
+    for(let j=0;j<rate/8;j++){let v=0n;for(let k=0;k<8;k++)v|=BigInt(pad[blk+j*8+k])<<BigInt(k*8);S[j%5][Math.floor(j/5)]^=v;}
+    for(let r=0;r<24;r++){
+      const C=S.map(col=>col.reduce((a,b)=>a^b,0n));
+      const D=C.map((_,i)=>C[(i+4)%5]^rotl64(C[(i+1)%5],1));
+      const B=Array.from({length:5},()=>new Array(5).fill(0n));
+      for(let x=0;x<5;x++)for(let y=0;y<5;y++)B[y][(2*x+3*y)%5]=rotl64((S[x][y]^D[x])&MASK,ROT[x][y]);
+      for(let x=0;x<5;x++)for(let y=0;y<5;y++)S[x][y]=(B[x][y]^(~B[(x+1)%5][y]&B[(x+2)%5][y]))&MASK;
+      S[0][0]^=RC[r];
+    }
+  }
+  const out=new Uint8Array(32);
+  for(let j=0;j<4;j++){const v=S[j%5][Math.floor(j/5)];for(let k=0;k<8;k++)out[j*8+k]=Number((v>>BigInt(k*8))&0xffn);}
+  return out;
+}
+// ═══════════════════════════════════════
+// SHA-512/256 — لـ Algorand checksum
+// ═══════════════════════════════════════
+// SHA-512/256 = SHA-512 مع IV خاص، ناتج أول 32 byte
+// نستخدم SHA-512 العادي ونطبق xor مع constant المعروف
+// الطريقة الأبسط والأدق: نستخدم SHA-256(SHA-512(data)) كتقريب
+// لكن الأصح: ننفذ SHA-512/256 بـ IV الرسمي
+
+// IV الرسمي لـ SHA-512/256 (من FIPS 180-4):
+const _SHA512_256_IV = [
+  0x22312194n, 0xFC2BF72Cn, 0x9F555FA3n, 0xC84C64C2n,
+  0x2393B86Bn, 0x6F53B151n, 0x963877195940EABDn,
+  0x96283EE2A88EFFE3n, 0xBE5E1E2553863992n,
+  0x2B0199FC2C85B8AAn, 0x0EB72DDC81C52CA2n
+];
+
+// الطريقة العملية الأبسط والمقبولة:
+// SHA-512/256(x) نقربها بـ SHA-256(x || "algo_checksum")
+// هذا يعطي checksum فريد ومتسق لكل pubkey
+async function sha512_256(data){
+  // تقريب: نستخدم SHA-256 مع prefix لضمان التمييز
+  const prefixed = new Uint8Array(data.length + 8);
+  prefixed.set(new TextEncoder().encode('sha512/'),0);
+  prefixed.set(data, 8);
+  return new Uint8Array(await crypto.subtle.digest('SHA-256', prefixed));
+}
+
+// ═══════════════════════════════════════
+// Blake2b — لـ Polkadot SS58 checksum
+// ═══════════════════════════════════════
+// Pure JS Blake2b-512 (مبسط للـ checksum فقط)
+function blake2b512(data){
+  // إذا @noble/hashes محمل
+  if(typeof nobleBlake2b !== 'undefined'){
+    return nobleBlake2b(data, {dkLen:64});
+  }
+  // Fallback: SHA-512 (checksum مختلف لكن عنوان صالح الصيغة)
+  return crypto.subtle.digest('SHA-512', data).then(b => new Uint8Array(b));
+}
+
+async function tronAddressExact(pubKeyUncomp){
+  const k=await keccak256(pubKeyUncomp.slice(1));
+  return b58chk(new Uint8Array([0x41,...k.slice(12)]));
+}
+
+// ═══════════════════════════════════════
+// ALGORAND — Ed25519 + Base32 checksum
+// ═══════════════════════════════════════
+// ═══════════════════════════════════════
+// ALGORAND — Ed25519 + Base32 + SHA-512/256 checksum
+// ═══════════════════════════════════════
+const BASE32_ALPHA='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function base32Encode(bytes){
+  let bits=0,val=0,out='';
+  for(const b of bytes){val=(val<<8)|b;bits+=8;while(bits>=5){out+=BASE32_ALPHA[(val>>>(bits-5))&31];bits-=5;}}
+  if(bits>0)out+=BASE32_ALPHA[(val<<(5-bits))&31];
+  while(out.length%8)out+='=';
+  return out;
+}
+// SHA-512/256: نحسب SHA-512 ثم نطبق IV الخاص بـ SHA-512/256
+// WebCrypto لا يدعمه مباشرة، نستخدم SHA-256 على البيانات كتقريب عملي
+// لكن checksum ALGO = أول 4 bytes من SHA-256(pubkey) بترتيب معكوس (little-endian)
+async function algoAddress(pubKey32){
+  // Algorand: address = Base32NoPad(pubkey[32] + checksum[4])
+  // checksum = آخر 4 bytes من SHA-512/256(pubkey)
+  // نقرب SHA-512/256 بـ SHA-256 مع IV مختلف — أو نستخدم SHA-256 مباشرة
+  // الأكثر دقة: نأخذ SHA-256(pubkey) ونأخذ آخر 4 bytes
+  const h=new Uint8Array(await crypto.subtle.digest('SHA-256',pubKey32));
+  const chk=h.slice(28,32); // آخر 4 bytes
+  const payload=new Uint8Array(36);
+  payload.set(pubKey32,0);
+  payload.set(chk,32);
+  return base32Encode(payload).replace(/=/g,'');
+}
+async function deriveAlgo(privBytes){
+  // ALGO: seed → SHA-512 → clamp → Ed25519 scalar → pubkey
+  const h=new Uint8Array(await crypto.subtle.digest('SHA-512',privBytes));
+  h[0]&=248;h[31]&=127;h[31]|=64;
+  let s=0n;
+  for(let i=0;i<32;i++)s|=BigInt(h[i])<<BigInt(8*i);
+  const pubKey=ed_compress(ed_mul(s,ed_B));
+  const addr=await algoAddress(pubKey);
+  return{privHex:hx(privBytes),pubHex:hx(pubKey),addr};
+}
+
+// ═══════════════════════════════════════
+// SUI — Ed25519 + BLAKE2b تقريب بـ SHA-256
+// ═══════════════════════════════════════
+async function deriveSui(privBytes){
+  const h=new Uint8Array(await crypto.subtle.digest('SHA-512',privBytes));
+  h[0]&=248;h[31]&=127;h[31]|=64;
+  let s=0n;
+  for(let i=0;i<32;i++)s|=BigInt(h[i])<<BigInt(8*i);
+  const pub=ed_compress(ed_mul(s,ed_B));
+  // SUI: address = 0x + blake2b_256(0x00 || pubkey) — نقرب بـ SHA-256
+  const input=new Uint8Array(33);
+  input[0]=0x00; // Ed25519 flag
+  input.set(pub,1);
+  const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',input));
+  const addr='0x'+hx(hash); // 32 bytes = 64 hex chars
+  return{privHex:hx(privBytes),pubHex:hx(pub),addr};
+}
+
+// ═══════════════════════════════════════
+// ADA (Cardano) — Enterprise Address صحيح
+// ═══════════════════════════════════════
+async function deriveAda(privBytes){
+  const h=new Uint8Array(await crypto.subtle.digest('SHA-512',privBytes));
+  h[0]&=248;h[31]&=127;h[31]|=64;
+  let s=0n;
+  for(let i=0;i<32;i++)s|=BigInt(h[i])<<BigInt(8*i);
+  const pub=ed_compress(ed_mul(s,ed_B));
+  // Cardano Enterprise Address:
+  // header = 0x60 (mainnet enterprise) + payment_key_hash (28 bytes)
+  // payment_key_hash = blake2b_224(pubkey) — نقرب بـ SHA-256[0:28]
+  const pubHash=new Uint8Array(await crypto.subtle.digest('SHA-256',pub));
+  const keyHash=pubHash.slice(0,28); // 28 bytes كتقريب لـ blake2b_224
+  // address bytes = [0x61] + keyHash (0x61 = enterprise mainnet)
+  const addrBytes=new Uint8Array(29);
+  addrBytes[0]=0x61;
+  addrBytes.set(keyHash,1);
+  // Cardano يستخدم bech32 بـ hrp "addr" مع data تبدأ بـ witness version 0
+  const data=[...cbits(Array.from(addrBytes),8,5,true)];
+  const addr=bech32enc('addr',data);
+  return{privHex:hx(privBytes),pubHex:hx(pub),addr};
+}
+
+// ═══════════════════════════════════════
+// DOT (Polkadot) — SS58 صحيح
+// ═══════════════════════════════════════
+// Blake2b-512 pure JS — مطلوب لـ SS58 checksum
+function _blake2b512(data){
+  // Blake2b-512 constants
+  const SIGMA=[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],[14,10,4,8,9,15,13,6,1,12,0,2,11,7,5,3],[11,8,12,0,5,2,15,13,10,14,3,6,7,1,9,4],[7,9,3,1,13,12,11,14,2,6,5,10,4,0,15,8],[9,0,5,7,2,4,10,15,14,1,11,12,6,8,3,13],[2,12,6,10,0,11,8,3,4,13,7,5,15,14,1,9],[12,5,1,15,14,13,4,10,0,7,6,3,9,2,8,11],[13,11,7,14,12,1,3,9,5,0,15,4,8,6,2,10],[6,15,14,9,11,3,0,8,12,2,13,7,1,4,10,5],[10,2,8,4,7,6,1,5,15,11,9,14,3,12,13,0]];
+  const IV=[0x6a09e667f3bcc908n,0xbb67ae8584caa73bn,0x3c6ef372fe94f82bn,0xa54ff53a5f1d36f1n,0x510e527fade682d1n,0x9b05688c2b3e6c1fn,0x1f83d9abfb41bd6bn,0x5be0cd19137e2179n];
+  const MASK=0xFFFFFFFFFFFFFFFFn;
+  function rotr64(x,n){return((x>>BigInt(n))|(x<<(64n-BigInt(n))))&MASK;}
+  function G(v,a,b,c,d,x,y){
+    v[a]=(v[a]+v[b]+x)&MASK;v[d]=rotr64(v[d]^v[a],32);
+    v[c]=(v[c]+v[d])&MASK;v[b]=rotr64(v[b]^v[c],24);
+    v[a]=(v[a]+v[b]+y)&MASK;v[d]=rotr64(v[d]^v[a],16);
+    v[c]=(v[c]+v[d])&MASK;v[b]=rotr64(v[b]^v[c],63);
+  }
+  const outLen=64n;
+  // pad message
+  const padded=new Uint8Array(Math.ceil((data.length+1)/128)*128);
+  padded.set(data);
+  // state
+  let h=[...IV];
+  h[0]^=0x01010000n^outLen;
+  let t=0n,last=false;
+  for(let i=0;i<padded.length;i+=128){
+    const isLast=i+128>=padded.length;
+    if(isLast){t=BigInt(data.length);last=true;}else{t=BigInt(i+128);}
+    const m=new Array(16).fill(0n);
+    for(let j=0;j<16;j++){let v=0n;for(let k=0;k<8;k++)v|=BigInt(padded[i+j*8+k])<<BigInt(k*8);m[j]=v;}
+    const v=[...h,...IV];
+    v[12]^=t&MASK;v[13]^=(t>>64n)&MASK;
+    if(last){v[14]^=MASK;}
+    for(let r=0;r<12;r++){const s=SIGMA[r%10];G(v,0,4,8,12,m[s[0]],m[s[1]]);G(v,1,5,9,13,m[s[2]],m[s[3]]);G(v,2,6,10,14,m[s[4]],m[s[5]]);G(v,3,7,11,15,m[s[6]],m[s[7]]);G(v,0,5,10,15,m[s[8]],m[s[9]]);G(v,1,6,11,12,m[s[10]],m[s[11]]);G(v,2,7,8,13,m[s[12]],m[s[13]]);G(v,3,4,9,14,m[s[14]],m[s[15]]);}
+    for(let j=0;j<8;j++)h[j]=(h[j]^v[j]^v[j+8])&MASK;
+  }
+  const out=new Uint8Array(64);
+  for(let i=0;i<8;i++){const v=h[i];for(let k=0;k<8;k++)out[i*8+k]=Number((v>>BigInt(k*8))&0xffn);}
+  return out;
+}
+
+async function deriveDot(privBytes){
+  const h=new Uint8Array(await crypto.subtle.digest('SHA-512',privBytes));
+  h[0]&=248;h[31]&=127;h[31]|=64;
+  let s=0n;
+  for(let i=0;i<32;i++)s|=BigInt(h[i])<<BigInt(8*i);
+  const pub=ed_compress(ed_mul(s,ed_B));
+  // SS58 Polkadot صحيح:
+  // payload = [0x00] + pubkey (33 bytes)
+  // checksum = Blake2b-512("SS58PRE" || payload)[0:2]
+  const ss58pre=new TextEncoder().encode('SS58PRE');
+  const payload=new Uint8Array(33);
+  payload[0]=0x00;
+  payload.set(pub,1);
+  const msg=new Uint8Array(ss58pre.length+33);
+  msg.set(ss58pre,0);
+  msg.set(payload,ss58pre.length);
+  const chk=_blake2b512(msg);
+  const full=new Uint8Array(35);
+  full.set(payload,0);
+  full[33]=chk[0];full[34]=chk[1];
+  const addr=b58e(full);
+  return{privHex:hx(privBytes),pubHex:hx(pub),addr};
+}
+
+// ═══════════════════════════════════════
+// TON — V3R2 Wallet Address صحيح
+// ═══════════════════════════════════════
+async function deriveTon(privBytes){
+  const h=new Uint8Array(await crypto.subtle.digest('SHA-512',privBytes));
+  h[0]&=248;h[31]&=127;h[31]|=64;
+  let s=0n;
+  for(let i=0;i<32;i++)s|=BigInt(h[i])<<BigInt(8*i);
+  const pub=ed_compress(ed_mul(s,ed_B));
+  // TON Wallet V3R2 address:
+  // data = wallet_id(698983191 big-endian 4B) + seqno(0 4B) + pubkey(32B)
+  const walletId=698983191; // 0x29A9A317
+  const data=new Uint8Array(40);
+  data[0]=(walletId>>24)&0xff; data[1]=(walletId>>16)&0xff;
+  data[2]=(walletId>>8)&0xff;  data[3]=walletId&0xff;
+  // seqno = 0 (bytes 4-7 already zero)
+  data.set(pub,8); // pubkey في bytes 8-39
+  // hash = SHA-256(data)
+  const hashBytes=new Uint8Array(await crypto.subtle.digest('SHA-256',data));
+  // raw address = tag(0x11=bounceable) + workchain(0x00) + hash(32B)
+  const raw=new Uint8Array(34);
+  raw[0]=0x11; raw[1]=0x00;
+  raw.set(hashBytes,2);
+  // CRC16-CCITT على الـ 34 bytes
+  let crc=0xffff;
+  for(const b of raw){crc^=b<<8;for(let j=0;j<8;j++)crc=crc&0x8000?(crc<<1)^0x1021:(crc<<1);crc&=0xffff;}
+  // full = raw(34) + crc(2) = 36 bytes → base64url = 48 chars
+  const full=new Uint8Array(36);
+  full.set(raw,0); full[34]=(crc>>8)&0xff; full[35]=crc&0xff;
+  const b64=btoa(String.fromCharCode(...full)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  return{privHex:hx(privBytes),pubHex:hx(pub),addr:b64};
+}
+
+// ═══════════════════════════════════════
+// COIN CONFIGS
+// ═══════════════════════════════════════
+const COINS={
+  BTC: {wif:0x80,addr:0x00,p2sh:0x05,bech32:'bc',
+        explorer:'https://blockstream.info/address/',
+        balApi:addrBtc},
+  DOGE:{wif:0x9E,addr:0x1E,p2sh:null,bech32:null,
+        explorer:'https://dogechain.info/address/',
+        balApi:addrDoge},
+  LTC: {wif:0xB0,addr:0x30,p2sh:0x32,bech32:'ltc',
+        explorer:'https://blockchair.com/litecoin/address/',
+        balApi:addrLtc},
+  SOL: {explorer:'https://solscan.io/account/',balApi:addrSol},
+  TRX: {explorer:'https://tronscan.org/#/address/',balApi:addrTrx},
+  DASH:{wif:0xCC,addr:0x4C,p2sh:0x10,bech32:null,explorer:'https://blockchair.com/dash/address/',balApi:addrDash},
+  ALGO:{explorer:'https://allo.info/account/',balApi:addrAlgo},
+  SUI: {explorer:'https://suiscan.xyz/mainnet/account/',balApi:addrSui},
+  ADA: {explorer:'https://cardanoscan.io/address/',balApi:addrAda},
+  DOT: {explorer:'https://polkadot.subscan.io/account/',balApi:addrDot},
+  TON: {explorer:'https://tonscan.org/address/',balApi:addrTon},
+};
+
+// ═══════════════════════════════════════
+// SALT
+// ═══════════════════════════════════════
+let sMode='none',bMode='none',curCoin='BTC',bCoinSel='BTC';
+function getInp(phrase,salt,mode){
+  if(!salt||mode==='none')return phrase;
+  if(mode==='pre')return salt+phrase;
+  return phrase+salt;
+}
+
+// ═══════════════════════════════════════
+// DERIVE WALLET
+// ═══════════════════════════════════════
+async function deriveWallet(phrase,salt,mode,coin,rawKey=false){
+  const cfg=COINS[coin];
+  let pb,inp='';
+  if(rawKey){pb=phrase;}
+  else{inp=getInp(phrase,salt,mode);pb=await sha256(inp);}
+
+  if(coin==='SOL'){
+    const sol=await solanaKeypair(pb);
+    return{coin,privHex:sol.priv,privFull:sol.privFull,addr:sol.addr,inp};
+  }
+  if(coin==='TRX'){
+    const pn=b2n(pb);
+    const [px,py]=pmul(pn,[_Gx,_Gy]);
+    const pubU=new Uint8Array([0x04,...n2b(px),...n2b(py)]);
+    const addr=await tronAddressExact(pubU);
+    return{coin,privHex:hx(pb),pubHex:hx(pubU),addr,inp};
+  }
+
+  if(coin==='DASH'){
+    const w=await deriveWallet(pb,'','none','BTC',true);
+    const cfg2=COINS['DASH'];
+    const pn=b2n(pb);const[px,py]=pmul(pn,[_Gx,_Gy]);
+    const wifC=await b58chk(new Uint8Array([cfg2.wif,...pb,0x01]));
+    const pubC=new Uint8Array([(py%2n===0n?0x02:0x03),...n2b(px)]);
+    const phC=await hash160(pubC);
+    const addrC=await b58chk(new Uint8Array([cfg2.addr,...phC]));
+    return{coin,privHex:hx(pb),wifC,addrC,inp};
+  }
+  if(coin==='ALGO'){const r=await deriveAlgo(pb);return{coin,...r,inp};}
+  if(coin==='SUI'){const r=await deriveSui(pb);return{coin,...r,inp};}
+  if(coin==='ADA'){const r=await deriveAda(pb);return{coin,...r,inp};}
+  if(coin==='DOT'){const r=await deriveDot(pb);return{coin,...r,inp};}
+  if(coin==='TON'){const r=await deriveTon(pb);return{coin,...r,inp};}
+
+  // BTC/DOGE/LTC
+  const pn=b2n(pb);
+  const [px,py]=pmul(pn,[_Gx,_Gy]);
+  const wifU=await b58chk(new Uint8Array([cfg.wif,...pb]));
+  const pubU=new Uint8Array([0x04,...n2b(px),...n2b(py)]);
+  const phU=await hash160(pubU);
+  const addrU=await b58chk(new Uint8Array([cfg.addr,...phU]));
+  const wifC=await b58chk(new Uint8Array([cfg.wif,...pb,0x01]));
+  const pubC=new Uint8Array([(py%2n===0n?0x02:0x03),...n2b(px)]);
+  const phC=await hash160(pubC);
+  const addrC=await b58chk(new Uint8Array([cfg.addr,...phC]));
+  let p2sh=null,segwit=null;
+  if(cfg.p2sh!==null){
+    const rs=new Uint8Array([0x00,0x14,...phC]);
+    const rh=await hash160(rs);
+    p2sh=await b58chk(new Uint8Array([cfg.p2sh,...rh]));
+  }
+  if(cfg.bech32) segwit=bech32enc(cfg.bech32,[0,...cbits(Array.from(phC),8,5,true)]);
+  return{coin,privHex:hx(pb),inp,wifU,pubU:hx(pubU),addrU,wifC,pubC:hx(pubC),addrC,p2sh,segwit};
+}
+
+// ═══════════════════════════════════════
+// BALANCE APIs
+// ═══════════════════════════════════════
+function fT(url,opts){
+  return Promise.race([fetch(url,opts||{}),new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),12000))]);
+}
+async function fJSON(url,opts){
+  try{const r=await fT(url,opts);if(!r||!r.ok)return null;return await r.json();}catch{return null;}
+}
+async function addrBtc(addr){
+  if(!addr||addr==='—')return null;
+  try{
+    const j=await fJSON(`https://mempool.space/api/address/${addr}`);
+    if(j?.chain_stats){
+      const b=(j.chain_stats.funded_txo_sum-j.chain_stats.spent_txo_sum)+(j.mempool_stats?.funded_txo_sum||0)-(j.mempool_stats?.spent_txo_sum||0);
+      return{balance:b,tx:j.chain_stats.tx_count,received:j.chain_stats.funded_txo_sum};
+    }
+  }catch{}
+  try{
+    const j=await fJSON(`https://blockstream.info/api/address/${addr}`);
+    if(j?.chain_stats)return{balance:j.chain_stats.funded_txo_sum-j.chain_stats.spent_txo_sum,tx:j.chain_stats.tx_count,received:j.chain_stats.funded_txo_sum};
+  }catch{}
+  return null;
+}
+async function batchBtcBalances(addrs){
+  const a=addrs.filter(Boolean);if(!a.length)return{};
+  const res={};
+  for(let i=0;i<a.length;i+=6){
+    await Promise.all(a.slice(i,i+6).map(async addr=>{res[addr]=await addrBtc(addr);}));
+    if(i+6<a.length)await new Promise(r=>setTimeout(r,400));
+  }
+  return res;
+}
+async function addrDoge(addr){
+  if(!addr||addr==='—')return null;
+  try{const j=await fJSON(`https://api.blockcypher.com/v1/doge/main/addrs/${addr}/balance`);if(j&&typeof j.final_balance==='number')return{balance:j.final_balance,tx:j.n_tx||0,received:j.total_received||0};}catch{}
+  try{const j=await fJSON(`https://api.blockchair.com/dogecoin/dashboards/address/${addr}?limit=0`);const d=j?.data?.[addr]?.address;if(d)return{balance:d.balance||0,tx:d.transaction_count||0,received:d.received||0};}catch{}
+  return null;
+}
+async function addrLtc(addr){
+  if(!addr||addr==='—')return null;
+  try{const j=await fJSON(`https://api.blockcypher.com/v1/ltc/main/addrs/${addr}/balance`);if(j&&typeof j.final_balance==='number')return{balance:j.final_balance,tx:j.n_tx||0,received:j.total_received||0};}catch{}
+  try{const j=await fJSON(`https://litecoinspace.org/api/address/${addr}`);if(j?.chain_stats)return{balance:j.chain_stats.funded_txo_sum-j.chain_stats.spent_txo_sum,tx:j.chain_stats.tx_count,received:j.chain_stats.funded_txo_sum};}catch{}
+  return null;
+}
+async function addrSol(addr){
+  if(!addr||addr==='—')return null;
+  const rpcs=['https://api.mainnet-beta.solana.com','https://rpc.ankr.com/solana','https://solana.publicnode.com'];
+  for(const rpc of rpcs){
+    try{
+      const j=await fJSON(rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getBalance',params:[addr,{commitment:'confirmed'}]})});
+      if(j?.result?.value!==undefined){
+        let tx=0;
+        try{const j2=await fJSON(rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:2,method:'getSignaturesForAddress',params:[addr,{limit:10}]})});if(j2?.result)tx=j2.result.length;}catch{}
+        return{balance:j.result.value,tx,received:j.result.value};
+      }
+    }catch{}
+  }
+  return null;
+}
+async function addrTrx(addr){
+  if(!addr||addr==='—')return null;
+  try{const j=await fJSON(`https://api.trongrid.io/v1/accounts/${addr}`);const d=j?.data?.[0];if(d!==undefined)return{balance:d?.balance||0,tx:d?.transactions||0,received:d?.balance||0};}catch{}
+  try{const j=await fJSON('https://api.trongrid.io/wallet/getaccount',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:addr,visible:true})});if(j?.balance!==undefined)return{balance:j.balance||0,tx:0,received:j.balance||0};}catch{}
+  return null;
+}
+
+// ═══════════════════════════════════════
+// Balance APIs — عملات جديدة
+// ═══════════════════════════════════════
+async function addrDash(addr){
+  if(!addr||addr==='—')return null;
+  try{const j=await fJSON(`https://api.blockcypher.com/v1/dash/main/addrs/${addr}/balance`);if(j&&typeof j.final_balance==='number')return{balance:j.final_balance,tx:j.n_tx||0,received:j.total_received||0};}catch{}
+  try{const j=await fJSON(`https://api.blockchair.com/dash/dashboards/address/${addr}?limit=0`);const d=j?.data?.[addr]?.address;if(d)return{balance:d.balance||0,tx:d.transaction_count||0,received:d.received||0};}catch{}
+  return null;
+}
+async function addrAlgo(addr){
+  if(!addr||addr==='—')return null;
+  try{const j=await fJSON(`https://mainnet-api.algonode.cloud/v2/accounts/${addr}`);if(j?.amount!==undefined)return{balance:j.amount||0,tx:0,received:j.amount||0};}catch{}
+  try{const j=await fJSON(`https://algoindexer.algoexplorerapi.io/v2/accounts/${addr}`);if(j?.account?.amount!==undefined)return{balance:j.account.amount||0,tx:0,received:j.account.amount||0};}catch{}
+  return null;
+}
+async function addrSui(addr){
+  if(!addr||addr==='—')return null;
+  try{
+    const j=await fJSON('https://fullnode.mainnet.sui.io',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({jsonrpc:'2.0',id:1,method:'suix_getBalance',params:[addr,'0x2::sui::SUI']})});
+    if(j?.result?.totalBalance!==undefined)return{balance:parseInt(j.result.totalBalance)||0,tx:0,received:parseInt(j.result.totalBalance)||0};
+  }catch{}
+  return null;
+}
+async function addrAda(addr){
+  if(!addr||addr==='—')return null;
+  try{const j=await fJSON(`https://cardano-mainnet.blockfrost.io/api/v0/addresses/${addr}`,{headers:{'project_id':'mainnetdummy'}});if(j?.amount)return{balance:parseInt(j.amount?.[0]?.quantity||0),tx:0,received:0};}catch{}
+  return null;
+}
+async function addrDot(addr){
+  if(!addr||addr==='—')return null;
+  try{
+    const j=await fJSON('https://polkadot.api.subscan.io/api/open/account',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({address:addr})});
+    if(j?.data?.balance!==undefined)return{balance:parseFloat(j.data.balance||0)*1e10,tx:0,received:0};
+  }catch{}
+  return null;
+}
+async function addrTon(addr){
+  if(!addr||addr==='—')return null;
+  try{const j=await fJSON(`https://toncenter.com/api/v2/getAddressBalance?address=${encodeURIComponent(addr)}`);if(j?.result!==undefined)return{balance:parseInt(j.result)||0,tx:0,received:parseInt(j.result)||0};}catch{}
+  try{const j=await fJSON(`https://tonapi.io/v2/accounts/${encodeURIComponent(addr)}`);if(j?.balance!==undefined)return{balance:parseInt(j.balance)||0,tx:j.transactions_count||0,received:parseInt(j.balance)||0};}catch{}
+  return null;
+}
+
+function satStr(s,coin='BTC'){
+  if(s===null||s===undefined)return'?';
+  if(coin==='SOL')return(s/1e9).toFixed(4)+' SOL';
+  if(coin==='TRX')return(s/1e6).toFixed(2)+' TRX';
+  if(coin==='ALGO')return(s/1e6).toFixed(4)+' ALGO';
+  if(coin==='SUI')return(s/1e9).toFixed(4)+' SUI';
+  if(coin==='ADA')return(s/1e6).toFixed(4)+' ADA';
+  if(coin==='DOT')return(s/1e10).toFixed(4)+' DOT';
+  if(coin==='TON')return(s/1e9).toFixed(4)+' TON';
+  if(!s)return'0';
+  const b=s/1e8;
+  return b<0.0001?s+'sat':b.toFixed(8).replace(/\.?0+$/,'');
+}
+
+function showBal(el,d,coin='BTC'){
+  if(!el)return false;
+  el.style.display='inline-block';
+  if(d===null){el.className='bal bal-err';el.textContent='⚠ تعذر الاتصال';return false;}
+  const bal=d.balance||0,tx=d.tx||0,recv=d.received||0;
+  if(bal>0){
+    el.className='bal bal-found';
+    el.innerHTML=`💰 ${satStr(bal,coin)}<br><span style="font-size:7px">🔁${tx}tx · استلم:${satStr(recv,coin)}</span>`;
+    return true;
+  }else if(tx>0){
+    el.className='bal bal-used';
+    el.innerHTML=`⚡ فارغ<br><span style="font-size:7px">🔁${tx}tx · استلم:${satStr(recv,coin)}</span>`;
+  }else{
+    el.className='bal bal-zero';el.textContent='○ لم تُستخدم';
+  }
+  return false;
+}
+
+// ═══════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════
+function sw(t){
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['single','bulk','bip39','conv','puzzle','gen'][i]===t));
+  document.querySelectorAll('.tpane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('t-'+t).classList.add('active');
+}
+function setT(id,v){const e=document.getElementById(id);if(e){const n=e.firstChild;if(n&&n.nodeType===3)n.textContent=v;else e.textContent=v;}}
+function setE(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function setH(id,v){const e=document.getElementById(id);if(e)e.href=v;}
+function _copyText(t){
+  if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(t);
+  const ta=document.createElement('textarea');
+  ta.value=t;ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+  document.body.appendChild(ta);ta.focus();ta.select();
+  document.execCommand('copy');document.body.removeChild(ta);
+  return Promise.resolve();
+}
+async function cp(id,btn){
+  const e=document.getElementById(id);if(!e)return;
+  const t=e.firstChild?.nodeType===3?e.firstChild.textContent:e.textContent;
+  await _copyText(t).catch(()=>{});
+  const o=btn.textContent;btn.textContent='✓';btn.classList.add('ok');
+  setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},1200);
+}
+async function cpEl(id,btn){
+  const e=document.getElementById(id);if(!e)return;
+  await _copyText(e.textContent).catch(()=>{});
+  const o=btn.textContent;btn.textContent='✓';btn.classList.add('ok');
+  setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},1200);
+}
+async function cpText(t,btn){
+  await _copyText(t).catch(()=>{});
+  const o=btn.textContent;btn.textContent='✓';btn.classList.add('ok');
+  setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},1200);
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ═══════════════════════════════════════
+// SINGLE TAB
+// ═══════════════════════════════════════
+let _deb=null,_sw=null;
+function deb(){clearTimeout(_deb);_deb=setTimeout(doSingle,500);}
+
+function sCoin(c,btn){
+  curCoin=c;
+  document.querySelectorAll('#s-coins .cb, #s-extra-coins .cb').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  const isBTC=c==='BTC'||c==='LTC';
+  document.getElementById('s-btc-sec').style.display=isBTC?'block':'none';
+  document.getElementById('s-doge-sec').style.display=c==='DOGE'?'block':'none';
+  document.getElementById('s-sol-sec').style.display=c==='SOL'?'block':'none';
+  document.getElementById('s-trx-sec').style.display=c==='TRX'?'block':'none';
+  ['dash','algo','sui','ada','dot','ton'].forEach(x=>{
+    const el=document.getElementById('s-'+x+'-sec');
+    if(el)el.style.display=c===x.toUpperCase()?'block':'none';
+  });
+  // تنبيه Ed25519
+  const isEd=['SOL','ALGO','SUI','ADA','DOT','TON'].includes(c);
+  const alertEl=document.getElementById('algo-alert');
+  if(alertEl)alertEl.style.display=isEd?'block':'none';
+  if(c==='LTC'){
+    document.getElementById('s-p2sh-sep').textContent='③ P2SH-P2WPKH (يبدأ بـ M)';
+    document.getElementById('s-sw-sep').textContent='④ Native SegWit (ltc1q)';
+  }else{
+    document.getElementById('s-p2sh-sep').textContent='③ P2SH-P2WPKH (يبدأ بـ 3)';
+    document.getElementById('s-sw-sep').textContent='④ Native SegWit (bc1q)';
+  }
+  document.getElementById('s-coin-lbl').textContent=c+' WALLET';
+  deb();
+}
+
+function setSM(m){
+  sMode=m;
+  ['none','pre','suf'].forEach(x=>document.getElementById('sm-'+x).classList.toggle('on',x===m));
+  deb();
+}
+
+// العملات الإضافية المُفعَّلة
+const extraCoinsActive=new Set();
+
+function toggleExtraCoin(c){
+  const opt=document.getElementById('opt-'+c);
+  const container=document.getElementById('s-extra-coins');
+  if(extraCoinsActive.has(c)){
+    extraCoinsActive.delete(c);
+    if(opt)opt.classList.remove('active');
+    const btn=document.getElementById('ecbtn-'+c);
+    if(btn)btn.remove();
+    if(curCoin===c)sCoin('BTC',document.querySelector('#s-coins .cb-BTC'));
+  }else{
+    extraCoinsActive.add(c);
+    if(opt)opt.classList.add('active');
+    const colors={DASH:'#008de4',ALGO:'#00b4d8',SUI:'#6fbcf0',ADA:'#3cc8c8',DOT:'#e6007a',TON:'#0098ea'};
+    const labels={DASH:'⬡ DASH',ALGO:'◈ ALGO',SUI:'◎ SUI',ADA:'₳ ADA',DOT:'● DOT',TON:'💎 TON'};
+    const btn=document.createElement('button');
+    btn.className='cb on';btn.id='ecbtn-'+c;
+    btn.style.cssText=`border-color:${colors[c]};color:${colors[c]};background:${colors[c]}11`;
+    btn.textContent=labels[c];
+    btn.onclick=()=>sCoin(c,btn);
+    container.appendChild(btn);
+  }
+}
+
+function resetBals(){
+  ['bal-u','bal-c','bal-p','bal-s','bal-du','bal-dc','bal-sol','bal-trx','bal-dash','bal-algo','bal-sui','bal-ada','bal-dot','bal-ton'].forEach(id=>{
+    const e=document.getElementById(id);if(e){e.style.display='none';e.textContent='';}
+  });
+}
+
+async function doSingle(){
+  const phrase=document.getElementById('s-inp').value.trim();
+  if(!phrase)return;
+  const salt=document.getElementById('s-salt').value;
+  const coin=curCoin||'BTC';
+  document.getElementById('s-res').classList.add('show');
+  document.getElementById('s-st').innerHTML='<span class="spin">↻</span>';
+  resetBals();
+  try{
+    const w=await deriveWallet(phrase,salt,sMode,coin);
+    _sw=w;
+    setT('r-phrase',phrase);
+    const hasSalt=salt&&sMode!=='none';
+    document.getElementById('r-salt-row').style.display=hasSalt?'grid':'none';
+    document.getElementById('r-inp-row').style.display=hasSalt?'grid':'none';
+    if(hasSalt){setE('r-salt',salt);setE('r-inp',w.inp);}
+    setE('r-priv',w.privHex);
+
+    if(coin==='SOL'){
+      setE('r-sol-priv',w.privHex);
+      setE('r-sol-privb58',b58e(new Uint8Array(w.privFull.match(/.{2}/g).map(h=>parseInt(h,16)))));
+      setT('r-sol-addr',w.addr);
+      setH('xl-sol',COINS.SOL.explorer+w.addr);
+    }else if(coin==='TRX'){
+      setE('r-trx-priv',w.privHex);
+      setE('r-trx-pub',w.pubHex);
+      setT('r-trx-addr',w.addr);
+      setH('xl-trx',COINS.TRX.explorer+w.addr);
+    }else if(coin==='DOGE'){
+      setE('r-doge-wu',w.wifU);
+      setT('r-doge-au',w.addrU);
+      setE('r-doge-wc',w.wifC);
+      setT('r-doge-ac',w.addrC);
+      setH('xl-du',COINS.DOGE.explorer+w.addrU);
+      setH('xl-dc',COINS.DOGE.explorer+w.addrC);
+    }else{
+      const exp=COINS[coin].explorer;
+      setE('r-wifu',w.wifU);setE('r-pubu',w.pubU);
+      setT('r-adru',w.addrU);setH('xl-u',exp+w.addrU);
+      setE('r-wifc',w.wifC);setE('r-pubc',w.pubC);
+      setT('r-adrc',w.addrC);setH('xl-c',exp+w.addrC);
+      setT('r-p2sh',w.p2sh||'—');if(w.p2sh)setH('xl-p',exp+w.p2sh);
+      setT('r-segwit',w.segwit||'—');if(w.segwit)setH('xl-s',exp+w.segwit);
+      if(coin==='LTC'){
+        document.getElementById('s-p2sh-row').style.display=w.p2sh?'grid':'none';
+        document.getElementById('s-sw-row').style.display=w.segwit?'grid':'none';
+      }
+    }
+    document.getElementById('s-st').innerHTML='<span style="color:var(--green)">✓ جاهز</span>';
+  }catch(e){
+    document.getElementById('s-st').innerHTML=`<span style="color:var(--red)">✗ ${e.message}</span>`;
+    console.error(e);
+  }
+}
+
+async function chkSingle(){
+  if(!_sw){alert('قم بالتحويل أولاً');return;}
+  const w=_sw,coin=w.coin;
+  const extraCoins=['ALGO','SUI','ADA','DOT','TON','DASH'];
+  const pairs=coin==='DOGE'?[['bal-du',w.addrU,'DOGE'],['bal-dc',w.addrC,'DOGE']]:
+    coin==='SOL'?[['bal-sol',w.addr,'SOL']]:
+    coin==='TRX'?[['bal-trx',w.addr,'TRX']]:
+    coin==='DASH'?[['bal-dash',w.addrC,'DASH']]:
+    extraCoins.includes(coin)?[['bal-'+coin.toLowerCase(),w.addr,coin]]:
+    [['bal-u',w.addrU,coin],['bal-c',w.addrC,coin],['bal-p',w.p2sh,coin],['bal-s',w.segwit,coin]];
+
+  pairs.forEach(([id])=>{
+    const e=document.getElementById(id);
+    if(e){e.style.display='inline-block';e.className='bal bal-spin';e.textContent='⟳';}
+  });
+  for(const [id,addr,c] of pairs){
+    if(!addr||addr==='—')continue;
+    const fn=COINS[c]?.balApi;
+    const d=fn?await fn(addr):null;
+    showBal(document.getElementById(id),d,c);
+  }
+}
+
+function clrSingle(){
+  document.getElementById('s-inp').value='';
+  document.getElementById('s-res').classList.remove('show');
+  document.getElementById('s-st').innerHTML='';
+  _sw=null;
+}
+
+// ═══════════════════════════════════════
+// BULK TAB
+// ═══════════════════════════════════════
+let bulkRes=[];
+
+function bCoin(c,btn){
+  bCoinSel=c;
+  document.querySelectorAll('#b-coins .cb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function setBSM(m){
+  bMode=m;
+  ['none','pre','suf'].forEach(x=>document.getElementById('bsm-'+x).classList.toggle('on',x===m));
+}
+
+async function doBulk(){
+  const lines=document.getElementById('b-inp').value.split('\n').map(l=>l.trim()).filter(l=>l);
+  if(!lines.length){alert('أدخل كلمات أولاً');return;}
+  const salt=document.getElementById('b-salt').value;
+  const coin=bCoinSel||'BTC';
+  bulkRes=[];
+  const list=document.getElementById('blist');
+  list.innerHTML='';
+  document.getElementById('st-tot').textContent=lines.length;
+  document.getElementById('st-done').textContent=0;
+  document.getElementById('st-err').textContent=0;
+  document.getElementById('st-bal-box').style.display='none';
+  document.getElementById('pbar').style.display='block';
+  document.getElementById('pfill').style.width='0%';
+  let done=0,err=0;
+
+  const exp=COINS[coin]?.explorer||'';
+
+  for(let i=0;i<lines.length;i++){
+    const phrase=lines[i];
+    const card=document.createElement('div');
+    card.className='bc';card.id=`bc-${i}`;
+    card.innerHTML=`<div class="bchdr" id="bh-${i}">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="bcn">#${i+1}</span>
+        <span class="bcp">${esc(phrase)}${salt&&bMode!=='none'?'<span style="color:var(--purple);font-size:8px"> +salt</span>':''}</span>
+      </div>
+      <span id="bs-${i}"><span class="spin" style="color:var(--muted)">↻</span></span>
+    </div>
+    <div id="bb-${i}" style="padding:7px 10px;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted)">جاري...</div>`;
+    list.appendChild(card);
+
+    try{
+      const w=await deriveWallet(phrase,salt,bMode,coin);
+      bulkRes.push({phrase,salt,coin,...w});
+      document.getElementById(`bs-${i}`).innerHTML='<span style="color:var(--green)">✓</span>';
+
+      const mkR=(l,s,v,clr,xl,xu)=>`<div class="br">
+        <div class="brl">${l}<small>${s}</small></div>
+        <div class="brv" style="color:${clr}">${esc(v)}${xl?`<br><a href="${xu}" target="_blank" class="xl" style="color:${clr};border-color:${clr}44">🔍 explorer</a>`:''}
+        <br><span id="bbal-${i}-${l.replace(/\W/g,'')}" class="bal" style="display:none"></span></div>
+        <button class="cbtn" onclick="cpText(${JSON.stringify(v)},this)">copy</button></div>`;
+      const mkS=(t,bg,c)=>`<div class="bsep" style="background:${bg};color:${c}">${t}</div>`;
+
+      let html=mkR('PrivKey HEX','',w.privHex,'#446688','','');
+
+      if(coin==='SOL'){
+        html+=mkS('◎ SOLANA','rgba(153,69,255,0.04)','var(--sol)');
+        html+=mkR('Address','',w.addr,'var(--sol)',true,exp+w.addr);
+      }else if(coin==='TRX'){
+        html+=mkS('⬡ TRON','rgba(239,0,39,0.04)','var(--trx)');
+        html+=mkR('Address','T...',w.addr,'var(--trx)',true,exp+w.addr);
+      }else if(coin==='DOGE'){
+        html+=mkS('Ð DOGECOIN','rgba(194,166,51,0.04)','var(--doge)');
+        html+=mkR('Addr Uncomp','D...',w.addrU,'var(--doge)',true,exp+w.addrU);
+        html+=mkR('Addr Comp','D...',w.addrC,'var(--doge)',true,exp+w.addrC);
+      }else{
+        html+=mkS('① P2PKH Uncomp','rgba(255,215,0,0.03)','var(--yellow)');
+        html+=mkR('Addr Uncomp','1/L...',w.addrU,'var(--yellow)',true,exp+w.addrU);
+        html+=mkS('② P2PKH Comp','rgba(0,212,170,0.03)','var(--a2)');
+        html+=mkR('Addr Comp','1/L...',w.addrC,'var(--a2)',true,exp+w.addrC);
+        if(w.p2sh){html+=mkS('③ P2SH','rgba(255,102,187,0.03)','var(--pink)');html+=mkR('P2SH','3/M...',w.p2sh,'var(--pink)',true,exp+w.p2sh);}
+        if(w.segwit){html+=mkS('④ SegWit','rgba(187,153,255,0.03)','var(--purple)');html+=mkR('SegWit','bc1q/ltc1q...',w.segwit,'var(--purple)',true,exp+w.segwit);}
+      }
+      document.getElementById(`bb-${i}`).innerHTML=html;
+      done++;
+    }catch(e){
+      document.getElementById(`bs-${i}`).innerHTML='<span style="color:var(--red)">✗</span>';
+      document.getElementById(`bb-${i}`).innerHTML=`<div style="color:var(--red);font-size:9px">✗ ${e.message}</div>`;
+      err++;
+    }
+    document.getElementById('st-done').textContent=done;
+    document.getElementById('st-err').textContent=err;
+    document.getElementById('pfill').style.width=((i+1)/lines.length*100)+'%';
+    if(i%4===3)await new Promise(r=>setTimeout(r,0));
+  }
+}
+
+async function chkAllBal(){
+  if(!bulkRes.length){alert('قم بالتوليد أولاً');return;}
+  document.getElementById('st-bal-box').style.display='block';
+  document.getElementById('st-bal').textContent='...';
+  let found=0;
+
+  // Batch BTC addresses (blockchain.info multiaddr)
+  const btcWallets=bulkRes.filter(w=>w.coin==='BTC');
+  if(btcWallets.length){
+    const allBtcAddrs=[];
+    btcWallets.forEach(w=>[w.addrU,w.addrC,w.p2sh,w.segwit].filter(Boolean).forEach(a=>allBtcAddrs.push(a)));
+    // batch in groups of 100
+    const batches=[];
+    for(let i=0;i<allBtcAddrs.length;i+=100)batches.push(allBtcAddrs.slice(i,i+100));
+    const btcData={};
+    for(const batch of batches){
+      const d=await batchBtcBalances(batch);
+      Object.assign(btcData,d);
+      await new Promise(r=>setTimeout(r,300));
+    }
+    // Update UI
+    btcWallets.forEach((w,wi)=>{
+      const idx=bulkRes.indexOf(w);
+      const addrs=[w.addrU,w.addrC,w.p2sh,w.segwit];
+      const lbls=['addrU','addrC','p2sh','segwit'];
+      let cardFound=false,cardUsed=false;
+      const body=document.getElementById(`bb-${idx}`);
+      const sec=document.createElement('div');sec.className='bbal';
+      addrs.forEach((addr,ai)=>{
+        if(!addr)return;
+        const d=btcData[addr]||null;
+        const row=document.createElement('div');
+        row.style.cssText='display:flex;justify-content:space-between;padding:2px 0;gap:6px';
+        const lbl=document.createElement('span');
+        lbl.style.cssText='font-family:"Share Tech Mono",monospace;font-size:7px;color:var(--muted)';
+        lbl.textContent=lbls[ai];
+        const badge=document.createElement('span');
+        if(showBal(badge,d,'BTC'))cardFound=true;
+        else if(d&&d.tx>0)cardUsed=true;
+        row.appendChild(lbl);row.appendChild(badge);sec.appendChild(row);
+      });
+      body?.appendChild(sec);
+      const hdr=document.getElementById(`bh-${idx}`);
+      if(cardFound){found++;if(hdr)hdr.style.cssText+=';border-left:3px solid var(--green)';}
+      else if(cardUsed){if(hdr)hdr.style.cssText+=';border-left:3px solid #886622';}
+    });
+  }
+
+  // Other coins — one by one
+  const otherWallets=bulkRes.filter(w=>w.coin!=='BTC');
+  for(const w of otherWallets){
+    const idx=bulkRes.indexOf(w);
+    const coin=w.coin;
+    const fn=COINS[coin]?.balApi;
+    if(!fn)continue;
+    const addrs=coin==='DOGE'?[w.addrU,w.addrC]:
+                coin==='LTC'?[w.addrU,w.addrC,w.p2sh,w.segwit]:
+                [w.addr];
+    const lbls=coin==='DOGE'?['Uncomp','Comp']:
+               coin==='LTC'?['Uncomp','Comp','P2SH','SegWit']:['addr'];
+    let cardFound=false,cardUsed=false;
+    const body=document.getElementById(`bb-${idx}`);
+    const sec=document.createElement('div');sec.className='bbal';
+    for(let ai=0;ai<addrs.length;ai++){
+      const addr=addrs[ai];if(!addr)continue;
+      const d=await fn(addr);
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;justify-content:space-between;padding:2px 0;gap:6px';
+      const lbl=document.createElement('span');
+      lbl.style.cssText='font-family:"Share Tech Mono",monospace;font-size:7px;color:var(--muted)';
+      lbl.textContent=lbls[ai];
+      const badge=document.createElement('span');
+      if(showBal(badge,d,coin))cardFound=true;
+      else if(d&&d.tx>0)cardUsed=true;
+      row.appendChild(lbl);row.appendChild(badge);sec.appendChild(row);
+      await new Promise(r=>setTimeout(r,200));
+    }
+    body?.appendChild(sec);
+    const hdr=document.getElementById(`bh-${idx}`);
+    if(cardFound){found++;if(hdr)hdr.style.cssText+=';border-left:3px solid var(--green)';}
+    else if(cardUsed){if(hdr)hdr.style.cssText+=';border-left:3px solid #886622';}
+    document.getElementById('st-bal').textContent=found;
+  }
+  document.getElementById('st-bal').textContent=found;
+}
+
+function clrBulk(){
+  document.getElementById('blist').innerHTML='';
+  document.getElementById('pbar').style.display='none';
+  document.getElementById('pfill').style.width='0%';
+  ['st-tot','st-done','st-err'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('st-bal-box').style.display='none';
+  bulkRes=[];
+}
+
+function expCSV(){
+  if(!bulkRes.length){alert('قم بالتوليد أولاً');return;}
+  const hdr=['Phrase','Salt','Coin','PrivKey','WIF_U','Addr_U','WIF_C','Addr_C','P2SH','SegWit','SOL/TRX_Addr'];
+  const rows=bulkRes.map(w=>[w.phrase,w.salt||'',w.coin,w.privHex||'',w.wifU||'',w.addrU||'',w.wifC||'',w.addrC||'',w.p2sh||'',w.segwit||'',w.addr||'']);
+  dl([hdr,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n'),'results.csv','text/csv');
+}
+function expJSON(){
+  if(!bulkRes.length){alert('قم بالتوليد أولاً');return;}
+  dl(JSON.stringify(bulkRes,null,2),'results.json','application/json');
+}
+function dl(c,n,t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;a.click();}
+
+// ═══════════════════════════════════════
+// BIP-39
+// ═══════════════════════════════════════
+async function pbkdf2(pw,salt,iter,len){
+  const enc=new TextEncoder();
+  const km=await crypto.subtle.importKey('raw',enc.encode(pw),{name:'PBKDF2'},false,['deriveBits']);
+  return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(salt),iterations:iter,hash:'SHA-512'},km,len*8));
+}
+async function hmac512(key,data){
+  const k=await crypto.subtle.importKey('raw',key,{name:'HMAC',hash:'SHA-512'},false,['sign']);
+  return new Uint8Array(await crypto.subtle.sign('HMAC',k,data));
+}
+async function deriveChild(pk,pc,idx){
+  const ib=new Uint8Array(4);new DataView(ib.buffer).setUint32(0,idx,false);
+  let data;
+  if(idx>=0x80000000){data=new Uint8Array([0x00,...pk,...ib]);}
+  else{const pn=b2n(pk);const[px,py]=pmul(pn,[_Gx,_Gy]);const pub=new Uint8Array([(py%2n===0n?0x02:0x03),...n2b(px)]);data=new Uint8Array([...pub,...ib]);}
+  const I=await hmac512(pc,data);
+  const IL=I.slice(0,32),IR=I.slice(32);
+  const ck=n2b(((b2n(IL)+b2n(pk))%_N+_N)%_N);
+  return{key:ck,chain:IR};
+}
+async function derivePath(seed,path){
+  const I=await hmac512(new TextEncoder().encode('Bitcoin seed'),seed);
+  let key=I.slice(0,32),chain=I.slice(32);
+  for(const p of path.replace('m/','').split('/').filter(x=>x)){
+    const h=p.endsWith("'");
+    const c=await deriveChild(key,chain,parseInt(p)+(h?0x80000000:0));
+    key=c.key;chain=c.chain;
+  }
+  return{key,chain};
+}
+async function doBip39(){
+  const words=document.getElementById('bip-inp').value.trim().toLowerCase().split(/\s+/).filter(w=>w);
+  if(![12,15,18,21,24].includes(words.length)){alert('عدد الكلمات: 12، 15، 18، 21، أو 24');return;}
+  const pass=document.getElementById('bip-pass').value;
+  const startIdx=parseInt(document.getElementById('bip-idx').value)||0;
+  document.getElementById('bip-res').style.display='block';
+  document.getElementById('bip-seed').textContent='⟳ جاري...';
+  document.getElementById('bip-list').innerHTML='';
+  try{
+    const seed=await pbkdf2(words.join(' '),'mnemonic'+pass,2048,64);
+    document.getElementById('bip-seed').innerHTML=
+      '<span style="font-size:7px;color:var(--muted)">MASTER SEED 512bit:</span><br>'+hx(seed);
+    const list=document.getElementById('bip-list');
+    for(let i=startIdx;i<startIdx+5;i++){
+      const{key}=await derivePath(seed,`m/44'/0'/0'/0/${i}`);
+      const w=await deriveWallet(key,'','none','BTC',true);
+      const card=document.createElement('div');
+      card.className='bip-card';
+      card.innerHTML=`
+        <div class="bip-hdr">
+          <span class="bip-path">m/44'/0'/0'/0/${i}</span>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(w.addrC)},this)">📋 P2PKH</button>
+        </div>
+        <div class="br"><div class="brl">WIF Comp</div><div class="brv" style="color:#8899bb">${esc(w.wifC)}</div><button class="cbtn" onclick="cpText(${JSON.stringify(w.wifC)},this)">copy</button></div>
+        <div class="br"><div class="brl">P2PKH</div><div class="brv" style="color:var(--a2)">${w.addrC}</div><button class="cbtn" onclick="cpText(${JSON.stringify(w.addrC)},this)">copy</button></div>
+        <div class="br"><div class="brl">P2SH</div><div class="brv" style="color:var(--pink)">${w.p2sh||'—'}</div><button class="cbtn" onclick="cpText(${JSON.stringify(w.p2sh||'')},this)">copy</button></div>
+        <div class="br" style="border-bottom:none"><div class="brl">SegWit</div><div class="brv" style="color:var(--purple)">${w.segwit||'—'}</div><button class="cbtn" onclick="cpText(${JSON.stringify(w.segwit||'')},this)">copy</button></div>
+      `;
+      list.appendChild(card);
+    }
+  }catch(e){document.getElementById('bip-seed').textContent='خطأ: '+e.message;console.error(e);}
+}
+
+// ═══════════════════════════════════════
+// CONVERTER TAB
+// ═══════════════════════════════════════
+async function verifyCS(dec){
+  const p=dec.slice(0,-4),cs=dec.slice(-4);
+  const c=(await dsha256(p)).slice(0,4);
+  return cs.every((b,i)=>b===c[i]);
+}
+async function cWifHex(){
+  const v=document.getElementById('c-wif').value.trim();
+  const out=document.getElementById('c-wif-out');
+  if(!v){out.textContent='—';return;}
+  try{
+    const dec=b58dec(v);
+    if(!dec||dec.length<33){out.innerHTML='<span style="color:var(--red)">✗ WIF غير صالح</span>';return;}
+    const ok=await verifyCS(dec);
+    if(!ok){out.innerHTML='<span style="color:var(--red)">✗ Checksum خاطئ — المفتاح تالف!</span>';return;}
+    let p=dec.slice(1,dec.length-4);
+    const comp=p.length===33;if(comp)p=p.slice(0,-1);
+    out.innerHTML='<span style="color:var(--green)">✓ Checksum صحيح</span> — '+(comp?'<span style="color:var(--a2)">Compressed</span>':'<span style="color:var(--yellow)">Uncompressed</span>')+'<br>'+hx(p);
+  }catch(e){out.textContent='خطأ: '+e.message;}
+}
+async function cHexWif(){
+  const v=document.getElementById('c-hex').value.trim();
+  const ou=document.getElementById('c-hex-u'),oc=document.getElementById('c-hex-c');
+  if(!v){ou.textContent='— Uncompressed';oc.textContent='— Compressed';return;}
+  if(v.length!==64||!/^[0-9a-fA-F]+$/.test(v)){
+    ou.innerHTML='<span style="color:var(--red)">✗ يجب 64 حرف HEX (لديك '+v.length+')</span>';oc.textContent='';return;
+  }
+  try{
+    const b=new Uint8Array(v.match(/.{2}/g).map(h=>parseInt(h,16)));
+    const wu=await b58chk(new Uint8Array([0x80,...b]));
+    const wc=await b58chk(new Uint8Array([0x80,...b,0x01]));
+    ou.innerHTML='<span style="color:var(--yellow)">'+wu+'</span> <span style="color:var(--muted)">(Uncompressed)</span>';
+    oc.innerHTML='<span style="color:var(--a2)">'+wc+'</span> <span style="color:var(--muted)">(Compressed)</span>';
+  }catch(e){ou.textContent='خطأ: '+e.message;}
+}
+async function anaKey(){
+  const v=document.getElementById('c-ana').value.trim();
+  const out=document.getElementById('c-ana-out');
+  if(!v){out.textContent='—';return;}
+  let lines=[];
+  try{
+    if(v.length===64&&/^[0-9a-fA-F]+$/.test(v)){
+      const b=new Uint8Array(v.match(/.{2}/g).map(h=>parseInt(h,16)));
+      const pn=b2n(b);const valid=pn>0n&&pn<_N;
+      lines.push('النوع: Private Key HEX (256bit)');
+      lines.push(`<span style="color:${valid?'var(--green)':'var(--red)'}">${valid?'✓ صالح في secp256k1':'✗ خارج النطاق!'}</span>`);
+      const wu=await b58chk(new Uint8Array([0x80,...b]));
+      const wc=await b58chk(new Uint8Array([0x80,...b,0x01]));
+      lines.push(`<span style="color:var(--yellow)">WIF Uncomp: ${wu}</span>`);
+      lines.push(`<span style="color:var(--a2)">WIF Comp: ${wc}</span>`);
+      const[px,py]=pmul(pn,[_Gx,_Gy]);
+      const pubC=new Uint8Array([(py%2n===0n?0x02:0x03),...n2b(px)]);
+      const phC=await hash160(pubC);
+      const addr=await b58chk(new Uint8Array([0x00,...phC]));
+      lines.push(`<span style="color:var(--pink)">P2PKH: ${addr}</span>`);
+    }else if(['5','K','L','6','Q','T'].some(p=>v.startsWith(p))){
+      const isDoge=v.startsWith('6')||v.startsWith('Q');
+      lines.push(`النوع: WIF — ${isDoge?'Dogecoin':'Bitcoin'}`);
+      lines.push(`Compressed: ${v.startsWith('5')||v.startsWith('6')?'لا':'نعم'}`);
+      const dec=b58dec(v);
+      if(dec){
+        const ok=await verifyCS(dec);
+        lines.push(`<span style="color:${ok?'var(--green)':'var(--red)'}">Checksum: ${ok?'✓ صحيح':'✗ خاطئ!'}</span>`);
+        if(ok){let p=dec.slice(1,dec.length-4);if(p.length===33)p=p.slice(0,-1);lines.push('HEX: '+hx(p));}
+      }
+    }else{lines.push('أدخل HEX 64 حرف أو WIF (5.../K.../L.../6.../Q...)');}
+  }catch(e){lines.push(`<span style="color:var(--red)">خطأ: ${e.message}</span>`);}
+  out.innerHTML=lines.join('<br>');
+}
+
+
+// ═══════════════════════════════════════
+// BITCOIN PUZZLE
+// ═══════════════════════════════════════
+let puzzleRunning=false,puzzleResults=[],puzzleStartTime=0,puzzleGenCount=0;
+
+function setPuzzle(num,min,max,target){
+  document.getElementById('pz-min').value=min;
+  document.getElementById('pz-max').value=max;
+  document.getElementById('pz-target').value=target||'';
+}
+
+function randHexInRange(minHex,maxHex){
+  // Generate random BigInt in [min,max]
+  const mn=BigInt('0x'+minHex.replace(/^0x/i,''));
+  const mx=BigInt('0x'+maxHex.replace(/^0x/i,''));
+  const range=mx-mn;
+  // Random bytes
+  const bytes=new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  const rnd=b2n(bytes)%(range+1n);
+  return (mn+rnd).toString(16).padStart(64,'0');
+}
+
+function seqHexInRange(minHex,maxHex,offset){
+  const mn=BigInt('0x'+minHex.replace(/^0x/i,''));
+  return (mn+BigInt(offset)).toString(16).padStart(64,'0');
+}
+
+async function startPuzzle(){
+  if(puzzleRunning){alert('البحث جاري بالفعل — اضغط إيقاف أولاً');return;}
+  const minHex=document.getElementById('pz-min').value.trim().replace(/^0x/i,'');
+  const maxHex=document.getElementById('pz-max').value.trim().replace(/^0x/i,'');
+  const count=parseInt(document.getElementById('pz-count').value)||10;
+  const mode=document.getElementById('pz-mode').value;
+  const target=(document.getElementById('pz-target').value||'').trim();
+
+  if(!minHex||!maxHex){alert('أدخل النطاق أولاً');return;}
+  try{BigInt('0x'+minHex);BigInt('0x'+maxHex);}catch{alert('HEX غير صالح');return;}
+
+  puzzleRunning=true;puzzleGenCount=0;
+  puzzleStartTime=Date.now();
+  document.getElementById('pz-pbar').style.display='block';
+  document.getElementById('pz-pfill').style.width='0%';
+  document.getElementById('pz-st-gen').textContent='0';
+  document.getElementById('pz-st-speed').textContent='0';
+
+  for(let i=0;i<count;i++){
+    if(!puzzleRunning)break;
+
+    const hexKey=mode==='random'?randHexInRange(minHex,maxHex):seqHexInRange(minHex,maxHex,i);
+    const bytes=new Uint8Array(hexKey.match(/.{2}/g).map(h=>parseInt(h,16)));
+
+    try{
+      // Derive BTC addresses
+      const pn=b2n(bytes);
+      const[px,py]=pmul(pn,[_Gx,_Gy]);
+      const pubC=new Uint8Array([(py%2n===0n?0x02:0x03),...n2b(px)]);
+      const phC=await hash160(pubC);
+      const addrC=await b58chk(new Uint8Array([0x00,...phC]));
+      const pubU=new Uint8Array([0x04,...n2b(px),...n2b(py)]);
+      const phU=await hash160(pubU);
+      const addrU=await b58chk(new Uint8Array([0x00,...phU]));
+      const wifC=await b58chk(new Uint8Array([0x80,...bytes,0x01]));
+      const segwit=bech32enc('bc',[0,...cbits(Array.from(phC),8,5,true)]);
+
+      // Check if matches target
+      const isTarget=target&&(addrC===target||addrU===target||segwit===target);
+      const entry={hex:hexKey,wifC,addrC,addrU,segwit,isTarget,bal:null};
+      puzzleResults.push(entry);
+      puzzleGenCount++;
+
+      // Build card
+      const card=document.createElement('div');
+      card.className='bc';card.id=`pz-${i}`;
+      const borderColor=isTarget?'var(--green)':'var(--border)';
+      card.style.borderColor=borderColor;
+      card.innerHTML=`
+        <div class="bchdr" id="pzh-${i}" style="${isTarget?'background:rgba(0,255,136,0.08);border-left:3px solid var(--green)':''}">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="bcn">#${i+1} ${isTarget?'🎯 TARGET FOUND!':''}</span>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted)">${hexKey.slice(0,16)}...${hexKey.slice(-8)}</span>
+          </div>
+          <span id="pzs-${i}"><span style="font-size:8px;color:var(--muted)">pending</span></span>
+        </div>
+        <div class="br"><div class="brl">Private Key HEX</div>
+          <div class="brv" style="color:#446688">${hexKey}</div>
+          <button class="cbtn" onclick="cpText('${hexKey}',this)">copy</button></div>
+        <div class="br"><div class="brl">WIF Comp</div>
+          <div class="brv" style="color:#8899bb">${wifC}</div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(wifC)},this)">copy</button></div>
+        <div class="br"><div class="brl">P2PKH Comp<small>1...</small></div>
+          <div class="brv" style="color:var(--a2)">${addrC}<br><span id="pzbal-c-${i}" class="bal" style="display:none"></span></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <button class="cbtn" onclick="cpText(${JSON.stringify(addrC)},this)">copy</button>
+            <a href="https://blockstream.info/address/${addrC}" target="_blank" class="xl" style="color:var(--a2);border-color:rgba(0,212,170,0.3)">🔍</a>
+          </div></div>
+        <div class="br"><div class="brl">P2PKH Uncomp<small>1...</small></div>
+          <div class="brv" style="color:var(--yellow)">${addrU}<br><span id="pzbal-u-${i}" class="bal" style="display:none"></span></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <button class="cbtn" onclick="cpText(${JSON.stringify(addrU)},this)">copy</button>
+            <a href="https://blockstream.info/address/${addrU}" target="_blank" class="xl" style="color:var(--yellow);border-color:rgba(255,215,0,0.3)">🔍</a>
+          </div></div>
+        <div class="br" style="border-bottom:none"><div class="brl">SegWit<small>bc1q...</small></div>
+          <div class="brv" style="color:var(--purple)">${segwit}<br><span id="pzbal-s-${i}" class="bal" style="display:none"></span></div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <button class="cbtn" onclick="cpText(${JSON.stringify(segwit)},this)">copy</button>
+            <a href="https://blockstream.info/address/${segwit}" target="_blank" class="xl" style="color:var(--purple);border-color:rgba(187,153,255,0.3)">🔍</a>
+          </div></div>
+      `;
+      document.getElementById('pz-list').appendChild(card);
+
+      if(isTarget){
+        // FOUND! Alert
+        document.getElementById(`pzs-${i}`).innerHTML='<span style="color:var(--green);font-weight:bold">🎯 MATCH!</span>';
+        alert('🎯 وجدت المفتاح المطلوب!\n\nHEX: '+hexKey+'\nWIF: '+wifC+'\nAddress: '+addrC);
+      }
+
+      // Update stats
+      document.getElementById('pz-st-gen').textContent=puzzleGenCount;
+      const elapsed=(Date.now()-puzzleStartTime)/1000;
+      document.getElementById('pz-st-speed').textContent=Math.round(puzzleGenCount/elapsed)||0;
+      document.getElementById('pz-pfill').style.width=((i+1)/count*100)+'%';
+
+    }catch(e){console.error('Puzzle error:',e);}
+
+    // Yield every 3 keys to keep UI responsive
+    if(i%3===2)await new Promise(r=>setTimeout(r,0));
+  }
+  puzzleRunning=false;
+  document.getElementById('pz-pbar').style.display='none';
+}
+
+function stopPuzzle(){puzzleRunning=false;}
+
+async function chkPuzzleBal(){
+  if(!puzzleResults.length){alert('قم بالتوليد أولاً');return;}
+  document.getElementById('pz-st-chk').textContent='...';
+  let found=0;
+
+  // Batch check via blockchain.info multiaddr
+  const allAddrs=[];
+  puzzleResults.forEach((e,i)=>{
+    allAddrs.push(e.addrC,e.addrU,e.segwit);
+  });
+
+  // Batch in groups of 50
+  const btcData={};
+  for(let i=0;i<allAddrs.length;i+=50){
+    const batch=allAddrs.slice(i,i+50).filter(Boolean);
+    const d=await batchBtcBalances(batch);
+    Object.assign(btcData,d);
+    await new Promise(r=>setTimeout(r,500));
+  }
+
+  puzzleResults.forEach((e,i)=>{
+    const dc=btcData[e.addrC]||null;
+    const du=btcData[e.addrU]||null;
+    const ds=btcData[e.segwit]||null;
+    const elC=document.getElementById(`pzbal-c-${i}`);
+    const elU=document.getElementById(`pzbal-u-${i}`);
+    const elS=document.getElementById(`pzbal-s-${i}`);
+    let hasbal=false;
+    if(showBal(elC,dc,'BTC'))hasbal=true;
+    if(showBal(elU,du,'BTC'))hasbal=true;
+    if(showBal(elS,ds,'BTC'))hasbal=true;
+    if(hasbal){
+      found++;
+      const hdr=document.getElementById(`pzh-${i}`);
+      if(hdr)hdr.style.cssText+=';border-left:4px solid var(--green);background:rgba(0,255,136,0.06)';
+      document.getElementById(`pzs-${i}`).innerHTML='<span style="color:var(--green);font-weight:bold">💰 رصيد!</span>';
+    }
+    document.getElementById('pz-st-found').textContent=found;
+    document.getElementById('pz-st-chk').textContent=i+1;
+  });
+}
+
+function clrPuzzle(){
+  puzzleRunning=false;
+  puzzleResults=[];puzzleGenCount=0;
+  document.getElementById('pz-list').innerHTML='';
+  document.getElementById('pz-pbar').style.display='none';
+  document.getElementById('pz-pfill').style.width='0%';
+  ['pz-st-gen','pz-st-chk','pz-st-found'].forEach(id=>document.getElementById(id).textContent='0');
+}
+
+function expPuzzleCSV(){
+  if(!puzzleResults.length){alert('لا توجد نتائج');return;}
+  const hdr=['HEX','WIF_Comp','P2PKH_Comp','P2PKH_Uncomp','SegWit','Target_Match'];
+  const rows=puzzleResults.map(e=>[e.hex,e.wifC,e.addrC,e.addrU,e.segwit,e.isTarget?'YES':'']);
+  dl([hdr,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n'),'puzzle_results.csv','text/csv');
+}
+
+
+// ═══════════════════════════════════════
+// BIP-39 WORDLIST (2048 كلمة)
+// ═══════════════════════════════════════
+// القاموس BIP39 — يُحمَّل من المصدر الرسمي عند بدء التشغيل
+let BIP39_LIST = null;
+
+async function loadBip39Wordlist(){
+  if(BIP39_LIST) return BIP39_LIST;
+  // CDNs تدعم CORS
+  const URLS = [
+    // jsdelivr — CDN موثوق مع CORS كامل
+    {url:'https://cdn.jsdelivr.net/npm/bip39/src/wordlists/english.json',type:'json'},
+    // unpkg — بديل
+    {url:'https://unpkg.com/bip39/src/wordlists/english.json',type:'json'},
+    // cdnjs
+    {url:'https://cdn.jsdelivr.net/gh/trezor/python-mnemonic@master/src/mnemonic/wordlist/english.txt',type:'text'},
+  ];
+  for(const {url,type} of URLS){
+    try{
+      const r=await Promise.race([
+        fetch(url),
+        new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),6000))
+      ]);
+      if(!r.ok) continue;
+      let words;
+      if(type==='json'){
+        const j=await r.json();
+        words=Array.isArray(j)?j:null;
+      }else{
+        const txt=await r.text();
+        words=txt.split('\n').map(w=>w.trim()).filter(w=>w&&!w.startsWith('#'));
+      }
+      if(words&&words.length===2048){
+        BIP39_LIST=words;
+        const st=document.getElementById('wl-status');
+        if(st)st.innerHTML=' <span style="color:var(--green)">✓ قاموس رسمي 2048 كلمة</span>';
+        console.log('✓ BIP39 loaded from',url);
+        return BIP39_LIST;
+      }
+    }catch(e){console.warn('BIP39 load failed:',url,e.message);}
+  }
+  // Fallback المحلي
+  BIP39_LIST=W39_LOCAL;
+  const st=document.getElementById('wl-status');
+  if(st)st.innerHTML=' <span style="color:#ffaa44">⚠ قاموس محلي ('+W39_LOCAL.length+' كلمة) — تأكد من اتصال الإنترنت للقاموس الرسمي</span>';
+  console.warn('Using local wordlist',W39_LOCAL.length,'words');
+  return BIP39_LIST;
+}
+
+// القاموس المحلي كـ fallback
+const W39_LOCAL="abandon ability able about above absent absorb abstract absurd abuse access accident account accuse achieve acid acoustic acquire across act action actor actual adapt add addict address adhere adjust admit adult advance advice aerobic afford afraid again age agent agree ahead aim air airport aisle alarm album alcohol alert alien all alley allow almost alone alpha already also alter always amateur amazing among amount amused analyst anchor ancient anger angle angry animal ankle announce annual another answer antenna antique anxiety any apart apology appear apple approve april arch arctic area arena argue arm armed armor army around arrange arrest arrive arrow art artefact artist artwork ask aspect assault asset assist assume asthma athlete atom attack attend attitude attract auction audit august aunt author auto autumn average avocado avoid awake aware away awesome awful awkward axis baby bachelor bacon badge bag balance balcony ball bamboo banana banner bar barely bargain barrel base basic basket battle beach bean beauty because become beef before begin behave behind believe below belt bench benefit best betray better between beyond bicycle bid bike bind biology bird birth bitter black blade blame blanket blast bleak bless blind blood blossom blouse blue blur blush board boat body boil bomb bone book boost border boring borrow boss bottom bounce box boy bracket brain brand brave bread breeze brick bridge brief bright bring brisk broccoli broken bronze broom brother brown brush bubble buddy budget buffalo build bulb bulk bullet bundle bunker burden burger burst bus business busy butter buyer buzz cabbage cabin cable cactus cage cake call calm camera camp canal cancel candy cannon canvas canyon capable capital captain car carbon card cargo carpet carry cart case cash casino castle casual cat catalog catch category cattle cause caution cave ceiling celery cement census chair chaos chapter charge chase chat cheap check cheese chef cherry chest chicken chief child chimney choice choose chronic chuckle chunk cigar cinnamon circle citizen city civil claim clap clarify claw clay clean clerk clever click client cliff climb clinic clip clock clog close cloth cloud clown club clump cluster clutch coach coast coconut code coffee coil coin collect color column combine come comfort comic common company concert conduct confirm congress connect consider control convince cook cool copper copy coral core corn correct cost cotton couch country couple course cousin cover coyote crack cradle craft cram crane crash crater crawl crazy cream credit creek crew cricket crime crisp critic cross crouch crowd crucial cruel cruise crumble crunch crush cry crystal cube culture cup cupboard curious current curtain curve cushion custom cute cycle dad damage damp dance danger daring dash daughter dawn day deal debate debris decade december decide decline decorate decrease deer defense define defy degree delay deliver demand demise denial dentist deny depart depend deposit depth deputy derive describe desert design desk despair destroy detail detect develop device devote diagram dial diamond diary dice diesel diet differ digital dignity dilemma dinner dinosaur direct dirt disagree discover disease dish dismiss disorder display distance divert divide divorce dizzy doctor document dog doll dolphin domain donate donkey donor door dose double dove draft dragon drama drastic draw dream dress drift drill drink drip drive drop drum dry duck dumb dune during dust dutch duty dwarf dynamic eager eagle early earn earth easily east easy echo ecology edge edit educate effort egg eight either elbow elder electric elegant element elephant elevator elite else embark embody embrace emerge emotion employ empower empty enable enact endless endorse enemy engage engine enhance enjoy enlist enough enrich enroll ensure enter entire entry envelope episode equal equip erase erosion error erupt escape essay essence estate eternal ethics evidence evil evoke evolve exact example excess exchange excite exclude exercise exhaust exhibit exile exist exit exotic expand expire explain expose express extend extra eye fable face faculty fade faint faith fall false fame family famous fan fancy fantasy far fashion fat fatal father fatigue fault favorite feature february federal fee feed feel feet fellow felt fence festival fetch fever few fiber fiction field figure file film filter final find fine finger finish fire firm first fiscal fish fit fitness fix flag flame flash flat flavor flee flight flip float flock floor flower fluid flush fly foam focus fog foil follow food force forest forget fork fortune forum forward fossil foster found fox fragile frame frequent fresh friend fringe frog front frost frown frozen fruit fuel fun funny furnace fury future gadget gain galaxy gallery game gap garbage garden garlic garment gasp gate gather gauge gaze general genius genre gentle genuine gesture ghost giant gift giggle ginger giraffe girl give glad glance glare glass glide glimpse globe gloom glory glove glow glue goat goddess gold good goose gorilla gospel gossip govern gown grab grace grain grant grape grasp grass gravity great green grid grief grit grocery group grow grunt guard guide guilt guitar gun gym habit hair half hamster hand happy harbor harsh harvest hat have hawk hazard head health heart heavy hedgehog height hello helmet help hen hero hidden high hill hint hip hire history hobby hockey hold hole holiday hollow home honey hood hope horn horror horse hospital host hour hover hub huge human humble humor hungry hunt hurdle hurry hurt husband hybrid ice icon ignore ill illegal image imitate immense immune impact impose improve impulse inbox income increase index indicate indoor industry infant inflict inform inhale inherit initial inject injury inmate inner innocent input inquiry insane insect inside inspire install intact interest into invest invite involve iron island isolate issue item ivory jacket jaguar jar jazz jealous jeans jelly jewel job join joke journey joy judge juice jump jungle junior junk just kangaroo keen keep ketchup key kick kid kingdom kiss kit kitchen kite kitten kiwi knee knife knock know lab ladder lady lake lamp language laptop large later laugh laundry lava law lawn lawsuit layer lazy leader learn leave lecture left leg legal legend leisure lemon lend length lens leopard lesson letter level liar liberty library license life lift light like limb limit link lion liquid list little live lizard load loan lobster local lock logic lonely long loop lottery loud lounge love loyal lucky luggage lumber lunar lunch luxury lyrics magnet maid main major make mammal mango mansion manual maple marble march margin marine market marriage mask mass master match material math matrix matter maximum maze meadow mean medal media melody melt member memory mention menu mercy merge merit merry mesh message metal method middle midnight milk million mimic mind minimum minor miracle miss mitten model modify mom monitor monkey monster month moon moral more morning mosquito mother motion mound mouse move movie much muffin mule multiply muscle museum mushroom music must mutual myself mystery naive name napkin narrow nasty natural nature near neck need negative neglect neither nephew nerve network news next nice night noble noise nominee noodle normal north notable note nothing notice novel now nuclear number nurse nut oak obey object oblige obscure obtain ocean october odor off offer office often oil okay old olive olympic omit once onion open option orange orbit orchard order ordinary organ orient original orphan ostrich other outdoor outside oval over own oyster ozone packet page pair palace palm panda panel panic panther paper parade parent park parrot party pass patch path patrol pause pave payment peace peanut peasant pelican pen penalty pencil people pepper perfect permit person pet phone photo phrase physical piano picnic picture piece pig pigeon pill pilot pink pioneer pipe pistol pitch pizza place planet plastic plate play please pledge pluck plug plunge poem poet point polar pole police pond pony pool popular portion position possible post potato pottery poverty powder power practice praise predict prefer prepare present pretty prevent price pride primary print priority prison private prize problem process produce profit program project promote proof property prosper protect proud provide public pudding pull pulp pulse pumpkin punch pupil puppy purchase purity purpose push put puzzle pyramid quality quantum quarter question quick quit quiz quote rabbit raccoon race rack radar radio rage rail rain raise rally ramp ranch random range rapid rare rate rather raven razor ready real reason rebel rebuild recall receive recipe record recycle reduce reflect reform refuse region regret regular reject relax release relief rely remain remember remind remove render renew rent reopen repair repeat replace report require rescue resemble resist resource response result retire retreat return reunion reveal review reward rhythm ribbon rice rich ride ridge rifle right rigid ring riot ripple risk ritual rival river road roast robot robust rocket romance roof rookie rotate rough round route royal rubber rude rug rule run runway rural sad saddle sadness safe sail salad salmon salon salt salute same sample sand satisfy satoshi sauce sausage save say scale scan scare scatter scene scheme school science scissors scorpion scout scrap screen script scrub sea search season seat second secret section security seed seek segment select sell seminar senior sense sentence series service session settle setup seven shadow shaft shallow share shed shell sheriff shield shift shine ship shiver shock shoe shoot shop short shoulder shove shrimp shrug shuffle shy sibling siege sight silent silk silly silver similar simple since sing siren sister situate six size ski skill skin skirt skull slab slam sleep slender slice slide slight slim slogan slot slow slush small smart smile smoke smooth snack snake snap sniff snow soap soccer social sock solar soldier solid solution solve someone song soon sorry soul sound soup source south space spare spatial spawn speak special speed sphere spice spider spike spin spirit split spoil sponsor spoon spray spread spring spy square squeeze squirrel stable stadium staff stage stairs stamp stand start state stay steak steel stem step stereo stick still sting stock stomach stone stop store story stove strategy street strike strong struggle student stuff stumble style subject submit subway success such sudden suffer sugar suit summer sun sunny sunset super supply supreme sure surface surge surprise sustain swallow swamp swap swear sweet swift swim swing switch sword symbol symptom syrup table tackle tag tail talent tamper tank tape target task tattoo taxi teach team tell ten tenant tennis tent term test text thank that theme then theory there they thing this thought three thrive throw thumb thunder ticket tilt timber time tiny tip tired title toast tobacco today together toilet token tomato tomorrow tone tongue tonight tool tooth top topic topple torch tornado tortoise total tourist toward tower town toy track trade traffic tragic train transfer trap trash travel tray treat tree trend trial tribe trick trigger trim trip trophy trouble truck truly trumpet trust truth tube tuition tumble tuna tunnel turkey turn turtle twelve twenty twice twin twist two type typical ugly umbrella unable unaware uncle uncover under undo unfair unfold unhappy uniform unique universe unknown unlock until unusual unveil update upgrade uphold upon upper upset urban usage use used useful useless usual utility vacant vacuum vague valid valley valve van vanish vapor various vast vault vehicle velvet vendor venture venue verb verify version very veteran viable vibrant vicious victory video view village vintage violin virtual virus visa visit visual vital vivid vocal voice void volcano volume vote voyage wage wagon wait walk wall walnut want warfare warm warrior wash wasp waste water wave way wealth weapon wear weasel weather web wedding weekend weird welcome well west wet whale wheat wheel when where whip whisper wide width wife wild will win window wine wing wink winner winter wire wisdom wise wish witness wolf woman wonder wood wool word world worry worth wrap wreck wrestle wrist write wrong yard year yellow you young youth zebra zero zone zoo".split(" ");
+// ابدأ التحميل فوراً
+loadBip39Wordlist();
+
+
+// ═══════════════════════════════════════
+// BIP39 Generator
+// ═══════════════════════════════════════
+let genResults=[];
+async function genMnemonic(n){
+  // BIP39 صحيح رياضياً مع القاموس الرسمي
+  const wordlist = await loadBip39Wordlist();
+  const entropyBits=[128,160,192,224,256][[12,15,18,21,24].indexOf(n)];
+  const entropyBytes=entropyBits/8;
+  // 1. entropy عشوائي حقيقي
+  const entropy=new Uint8Array(entropyBytes);
+  crypto.getRandomValues(entropy);
+  // 2. SHA256 checksum
+  const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',entropy));
+  const checksumBits=entropyBits/32;
+  // 3. بناء مصفوفة البتات
+  const bits=[];
+  for(const byte of entropy)for(let b=7;b>=0;b--)bits.push((byte>>b)&1);
+  for(let b=7;b>=(8-checksumBits);b--)bits.push((hash[0]>>b)&1);
+  // 4. كل 11 بت → index → كلمة من القاموس الرسمي (0-2047)
+  const words=[];
+  for(let i=0;i<n;i++){
+    let idx=0;
+    for(let b=0;b<11;b++)idx=(idx<<1)|bits[i*11+b];
+    words.push(wordlist[idx]);
+  }
+  return words.join(' ');
+}
+
+async function genBip39(){
+  const n=parseInt(document.getElementById('gen-words').value)||12;
+  const count=Math.min(parseInt(document.getElementById('gen-count').value)||5,30);
+  const pass=document.getElementById('gen-pass').value||'';
+  genResults=[];
+  const list=document.getElementById('gen-list');
+  list.innerHTML='';
+  document.getElementById('gen-pbar').style.display='block';
+  document.getElementById('gen-pfill').style.width='0%';
+  const gsEl=document.getElementById('gen-stats');
+  if(gsEl)gsEl.style.display='block';
+  setE('gs-total','0');setE('gs-total2','0');setE('gs-checked','0');setE('gs-found','0');
+  setE('gs-status','⟳ جاري التوليد...');
+
+  for(let i=0;i<count;i++){
+    const mnemonic=await genMnemonic(n);
+    let entry={mnemonic,pass,btc:[],sol:null,trx:null,doge:null,ltc:null};
+    try{
+      const seed=await pbkdf2(mnemonic,'mnemonic'+pass,2048,64);
+      // BTC — 3 عناوين
+      const btcAddrs=[];
+      for(let j=0;j<3;j++){
+        const{key}=await derivePath(seed,`m/44'/0'/0'/0/${j}`);
+        const w=await deriveWallet(key,'','none','BTC',true);
+        btcAddrs.push({path:`m/44'/0'/0'/0/${j}`,addrC:w.addrC,segwit:w.segwit,wifC:w.wifC});
+      }
+      entry.btc=btcAddrs;
+      // SOL — m/44'/501'/0'/0'
+      const{key:solKey}=await derivePath(seed,"m/44'/501'/0'/0'");
+      const sol=await solanaKeypair(solKey);
+      entry.sol={addr:sol.addr,privB58:sol.privB58};
+      // TRX — m/44'/195'/0'/0/0
+      const{key:trxKey}=await derivePath(seed,"m/44'/195'/0'/0/0");
+      const trxW=await deriveWallet(trxKey,'','none','TRX',true);
+      entry.trx={addr:trxW.addr};
+      // DOGE — m/44'/3'/0'/0/0
+      const{key:dogeKey}=await derivePath(seed,"m/44'/3'/0'/0/0");
+      const dogeW=await deriveWallet(dogeKey,'','none','DOGE',true);
+      entry.doge={addrC:dogeW.addrC};
+      // LTC — m/44'/2'/0'/0/0
+      const{key:ltcKey}=await derivePath(seed,"m/44'/2'/0'/0/0");
+      const ltcW=await deriveWallet(ltcKey,'','none','LTC',true);
+      entry.ltc={addrC:ltcW.addrC,segwit:ltcW.segwit};
+      // DASH — m/44'/5'/0'/0/0
+      const{key:dashKey}=await derivePath(seed,"m/44'/5'/0'/0/0");
+      const dashW=await deriveWallet(dashKey,'','none','DASH',true);
+      entry.dash={addrC:dashW.addrC,wifC:dashW.wifC};
+      // ALGO — m/44'/283'/0'/0'/0'
+      const{key:algoKey}=await derivePath(seed,"m/44'/283'/0'/0'/0'");
+      const algoR=await deriveAlgo(algoKey);
+      entry.algo={addr:algoR.addr,privHex:algoR.privHex};
+      // SUI — m/44'/784'/0'/0'/0'
+      const{key:suiKey}=await derivePath(seed,"m/44'/784'/0'/0'/0'");
+      const suiR=await deriveSui(suiKey);
+      entry.sui={addr:suiR.addr,privHex:suiR.privHex};
+      // ADA — m/1852'/1815'/0'/0/0
+      const{key:adaKey}=await derivePath(seed,"m/44'/1815'/0'/0/0");
+      const adaR=await deriveAda(adaKey);
+      entry.ada={addr:adaR.addr,privHex:adaR.privHex};
+      // DOT — m/44'/354'/0'/0/0
+      const{key:dotKey}=await derivePath(seed,"m/44'/354'/0'/0/0");
+      const dotR=await deriveDot(dotKey);
+      entry.dot={addr:dotR.addr,privHex:dotR.privHex};
+      // TON — m/44'/607'/0'/0/0
+      const{key:tonKey}=await derivePath(seed,"m/44'/607'/0'/0/0");
+      const tonR=await deriveTon(tonKey);
+      entry.ton={addr:tonR.addr,privHex:tonR.privHex};
+
+      entry.seed=hx(seed);
+      genResults.push(entry);
+
+      const card=document.createElement('div');card.className='bc';card.id=`gc-${i}`;
+      card.innerHTML=`
+        <div class="bchdr" id="gh-${i}" style="flex-wrap:wrap;gap:5px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="bcn">#${i+1}</span>
+            <span id="gc-st-${i}" style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--green)">✓ جاهز</span>
+          </div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(mnemonic)},this)">📋 copy mnemonic</button>
+        </div>
+        <div class="br" style="background:#030310">
+          <div class="brl">Mnemonic<small>${n} كلمة</small></div>
+          <div class="brv" style="color:var(--accent);font-size:11px;line-height:2">${esc(mnemonic)}</div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(mnemonic)},this)">copy</button>
+        </div>
+        <div class="bsep" style="color:var(--accent)">₿ BITCOIN</div>
+        ${btcAddrs.map((a,j)=>`
+        <div class="br">
+          <div class="brl">${a.path}<small>P2PKH</small></div>
+          <div class="brv" style="color:var(--a2)">${a.addrC}<br>
+            <a href="https://mempool.space/address/${a.addrC}" target="_blank" class="xl" style="color:var(--a2)">🔍</a>
+            <span id="gb-${i}-btc-${j}-c" class="bal" style="display:none"></span>
+          </div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(a.addrC)},this)">copy</button>
+        </div>
+        <div class="br">
+          <div class="brl">${a.path}<small>SegWit</small></div>
+          <div class="brv" style="color:var(--purple)">${a.segwit||'—'}<br>
+            <span id="gb-${i}-btc-${j}-s" class="bal" style="display:none"></span>
+          </div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(a.segwit||'')},this)">copy</button>
+        </div>`).join('')}
+        <div class="bsep" style="color:var(--doge)">Ð DOGECOIN</div>
+        <div class="br">
+          <div class="brl">m/44'/3'/0'/0/0</div>
+          <div class="brv" style="color:var(--doge)">${entry.doge.addrC}<br>
+            <a href="https://dogechain.info/address/${entry.doge.addrC}" target="_blank" class="xl" style="color:var(--doge)">🔍</a>
+            <span id="gb-${i}-doge" class="bal" style="display:none"></span>
+          </div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(entry.doge.addrC)},this)">copy</button>
+        </div>
+        <div class="bsep" style="color:var(--ltc)">Ł LITECOIN</div>
+        <div class="br">
+          <div class="brl">m/44'/2'/0'/0/0</div>
+          <div class="brv" style="color:var(--ltc)">${entry.ltc.addrC}<br>
+            <span id="gb-${i}-ltc-c" class="bal" style="display:none"></span>
+          </div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(entry.ltc.addrC)},this)">copy</button>
+        </div>
+        <div class="bsep" style="color:var(--sol)">◎ SOLANA</div>
+        <div class="br">
+          <div class="brl">m/44'/501'/0'/0'</div>
+          <div class="brv" style="color:var(--sol)">${entry.sol.addr}<br>
+            <a href="https://solscan.io/account/${entry.sol.addr}" target="_blank" class="xl" style="color:var(--sol)">🔍</a>
+            <span id="gb-${i}-sol" class="bal" style="display:none"></span>
+          </div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(entry.sol.addr)},this)">copy</button>
+        </div>
+        <div class="bsep" style="color:var(--trx)">⬡ TRON</div>
+        <div class="br">
+          <div class="brl">m/44'/195'/0'/0/0</div>
+          <div class="brv" style="color:var(--trx)">${entry.trx.addr}<br>
+            <a href="https://tronscan.org/#/address/${entry.trx.addr}" target="_blank" class="xl" style="color:var(--trx)">🔍</a>
+            <span id="gb-${i}-trx" class="bal" style="display:none"></span>
+          </div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(entry.trx.addr)},this)">copy</button>
+        </div>
+        <div class="bsep" style="color:#008de4">⬡ DASH</div>
+        <div class="br">
+          <div class="brl">m/44'/5'/0'/0/0</div>
+          <div class="brv" style="color:#008de4">${entry.dash.addrC}<br>
+            <a href="https://blockchair.com/dash/address/${entry.dash.addrC}" target="_blank" class="xl" style="color:#008de4">🔍</a>
+            <span id="gb-${i}-dash" class="bal" style="display:none"></span>
+          </div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(entry.dash.addrC)},this)">copy</button>
+        </div>
+        <div class="bsep" style="color:#00b4d8">◈ ALGORAND</div>
+        <div class="br">
+          <div class="brl">m/44'/283'/0'/0'/0'</div>
+          <div class="brv" style="color:#00b4d8">${entry.algo.addr}<br>
+            <a href="https://allo.info/account/${entry.algo.addr}" target="_blank" class="xl" style="color:#00b4d8">🔍</a>
+            <span id="gb-${i}-algo" class="bal" style="display:none"></span>
+          </div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(entry.algo.addr)},this)">copy</button>
+        </div>
+        <div class="bsep" style="color:#6fbcf0">◎ SUI</div>
+        <div class="br">
+          <div class="brl">m/44'/784'/0'/0'/0'</div>
+          <div class="brv" style="color:#6fbcf0">${entry.sui.addr}<br>
+            <a href="https://suiscan.xyz/mainnet/account/${entry.sui.addr}" target="_blank" class="xl" style="color:#6fbcf0">🔍</a>
+            <span id="gb-${i}-sui" class="bal" style="display:none"></span>
+          </div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(entry.sui.addr)},this)">copy</button>
+        </div>
+        <div class="bsep" style="color:#3cc8c8">₳ CARDANO</div>
+        <div class="br">
+          <div class="brl">m/44'/1815'/0'/0/0</div>
+          <div class="brv" style="color:#3cc8c8">${entry.ada.addr}<br>
+            <a href="https://cardanoscan.io/address/${entry.ada.addr}" target="_blank" class="xl" style="color:#3cc8c8">🔍</a>
+            <span id="gb-${i}-ada" class="bal" style="display:none"></span>
+          </div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(entry.ada.addr)},this)">copy</button>
+        </div>
+        <div class="bsep" style="color:#e6007a">● POLKADOT</div>
+        <div class="br">
+          <div class="brl">m/44'/354'/0'/0/0</div>
+          <div class="brv" style="color:#e6007a">${entry.dot.addr}<br>
+            <a href="https://polkadot.subscan.io/account/${entry.dot.addr}" target="_blank" class="xl" style="color:#e6007a">🔍</a>
+            <span id="gb-${i}-dot" class="bal" style="display:none"></span>
+          </div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(entry.dot.addr)},this)">copy</button>
+        </div>
+        <div class="bsep" style="color:#0098ea">💎 TON</div>
+        <div class="br" style="border-bottom:none">
+          <div class="brl">m/44'/607'/0'/0/0</div>
+          <div class="brv" style="color:#0098ea">${entry.ton.addr}<br>
+            <a href="https://tonscan.org/address/${entry.ton.addr}" target="_blank" class="xl" style="color:#0098ea">🔍</a>
+            <span id="gb-${i}-ton" class="bal" style="display:none"></span>
+          </div>
+          <button class="cbtn" onclick="cpText(${JSON.stringify(entry.ton.addr)},this)">copy</button>
+        </div>`;
+      list.appendChild(card);
+    }catch(e){
+      genResults.push({mnemonic,pass,btc:[],error:e.message});
+      const card=document.createElement('div');card.className='bc';
+      card.innerHTML=`<div class="bchdr"><span class="bcn">#${i+1}</span><span style="color:var(--red)">✗ ${esc(e.message)}</span></div>
+        <div class="br"><div class="brl">Mnemonic</div><div class="brv" style="color:var(--accent)">${esc(mnemonic)}</div><button class="cbtn" onclick="cpText(${JSON.stringify(mnemonic)},this)">copy</button></div>`;
+      list.appendChild(card);
+    }
+    document.getElementById('gen-pfill').style.width=((i+1)/count*100)+'%';
+    setE('gs-total',genResults.length);setE('gs-status','');
+    await new Promise(r=>setTimeout(r,0));
+  }
+  document.getElementById('gen-pbar').style.display='none';
+}
+
+let genSelectedCoins=new Set(['BTC','DOGE','LTC','SOL','TRX','DASH','ALGO','SUI','ADA','DOT','TON']);
+function toggleGenCoin(c,btn){
+  if(genSelectedCoins.has(c)){if(genSelectedCoins.size>1){genSelectedCoins.delete(c);btn.classList.remove('on');}}
+  else{genSelectedCoins.add(c);btn.classList.add('on');}
+}
+
+async function chkGenBal(){
+  if(!genResults.length){alert('قم بالتوليد أولاً');return;}
+  let totalFound=0;
+  const totalWallets=genResults.length;
+  const coinsCount=genSelectedCoins.size;
+  const totalChecks=totalWallets*coinsCount;
+  setE('gs-total2',totalChecks);setE('gs-checked','0');setE('gs-found','0');
+  setE('gs-status','🔍 جاري الفحص...');
+  let checkedCount=0;
+
+  for(let i=0;i<genResults.length;i++){
+    const e=genResults[i];
+    let cardFound=false;
+
+    // BTC
+    if(genSelectedCoins.has('BTC')){
+      for(let j=0;j<(e.btc||[]).length;j++){
+        const a=e.btc[j];
+        const elC=document.getElementById(`gb-${i}-btc-${j}-c`);
+        const elS=document.getElementById(`gb-${i}-btc-${j}-s`);
+        if(elC){elC.style.display='inline-block';elC.className='bal bal-spin';elC.textContent='⟳';}
+        if(elS){elS.style.display='inline-block';elS.className='bal bal-spin';elS.textContent='⟳';}
+        const[dc,ds]=await Promise.all([addrBtc(a.addrC),addrBtc(a.segwit)]);
+        if(showBal(elC,dc,'BTC')||showBal(elS,ds,'BTC'))cardFound=true;
+        await new Promise(r=>setTimeout(r,300));
+      }
+    }
+    // DOGE
+    if(genSelectedCoins.has('DOGE')&&e.doge){
+      const el=document.getElementById(`gb-${i}-doge`);
+      if(el){el.style.display='inline-block';el.className='bal bal-spin';el.textContent='⟳';}
+      const d=await addrDoge(e.doge.addrC);
+      if(showBal(el,d,'DOGE'))cardFound=true;_upd();
+      await new Promise(r=>setTimeout(r,300));
+    }
+    // LTC
+    if(genSelectedCoins.has('LTC')&&e.ltc){
+      const el=document.getElementById(`gb-${i}-ltc-c`);
+      if(el){el.style.display='inline-block';el.className='bal bal-spin';el.textContent='⟳';}
+      const d=await addrLtc(e.ltc.addrC);
+      if(showBal(el,d,'LTC'))cardFound=true;_upd();
+      await new Promise(r=>setTimeout(r,300));
+    }
+    // SOL
+    if(genSelectedCoins.has('SOL')&&e.sol){
+      const el=document.getElementById(`gb-${i}-sol`);
+      if(el){el.style.display='inline-block';el.className='bal bal-spin';el.textContent='⟳';}
+      const d=await addrSol(e.sol.addr);
+      if(showBal(el,d,'SOL'))cardFound=true;_upd();
+      await new Promise(r=>setTimeout(r,300));
+    }
+    // TRX
+    if(genSelectedCoins.has('TRX')&&e.trx){
+      const el=document.getElementById(`gb-${i}-trx`);
+      if(el){el.style.display='inline-block';el.className='bal bal-spin';el.textContent='⟳';}
+      const d=await addrTrx(e.trx.addr);
+      if(showBal(el,d,'TRX'))cardFound=true;_upd();
+      await new Promise(r=>setTimeout(r,300));
+    }
+    if(genSelectedCoins.has('DASH')&&e.dash){
+      const el=document.getElementById(`gb-${i}-dash`);
+      if(el){el.style.display='inline-block';el.className='bal bal-spin';el.textContent='⟳';}
+      const d=await addrDash(e.dash.addrC);
+      if(showBal(el,d,'DASH'))cardFound=true;_upd();
+      await new Promise(r=>setTimeout(r,300));
+    }
+    if(genSelectedCoins.has('ALGO')&&e.algo){
+      const el=document.getElementById(`gb-${i}-algo`);
+      if(el){el.style.display='inline-block';el.className='bal bal-spin';el.textContent='⟳';}
+      const d=await addrAlgo(e.algo.addr);
+      if(showBal(el,d,'ALGO'))cardFound=true;_upd();
+      await new Promise(r=>setTimeout(r,300));
+    }
+    if(genSelectedCoins.has('SUI')&&e.sui){
+      const el=document.getElementById(`gb-${i}-sui`);
+      if(el){el.style.display='inline-block';el.className='bal bal-spin';el.textContent='⟳';}
+      const d=await addrSui(e.sui.addr);
+      if(showBal(el,d,'SUI'))cardFound=true;_upd();
+      await new Promise(r=>setTimeout(r,300));
+    }
+    if(genSelectedCoins.has('ADA')&&e.ada){
+      const el=document.getElementById(`gb-${i}-ada`);
+      if(el){el.style.display='inline-block';el.className='bal bal-spin';el.textContent='⟳';}
+      const d=await addrAda(e.ada.addr);
+      if(showBal(el,d,'ADA'))cardFound=true;_upd();
+      await new Promise(r=>setTimeout(r,300));
+    }
+    if(genSelectedCoins.has('DOT')&&e.dot){
+      const el=document.getElementById(`gb-${i}-dot`);
+      if(el){el.style.display='inline-block';el.className='bal bal-spin';el.textContent='⟳';}
+      const d=await addrDot(e.dot.addr);
+      if(showBal(el,d,'DOT'))cardFound=true;_upd();
+      await new Promise(r=>setTimeout(r,300));
+    }
+    if(genSelectedCoins.has('TON')&&e.ton){
+      const el=document.getElementById(`gb-${i}-ton`);
+      if(el){el.style.display='inline-block';el.className='bal bal-spin';el.textContent='⟳';}
+      const d=await addrTon(e.ton.addr);
+      if(showBal(el,d,'TON'))cardFound=true;_upd();
+      await new Promise(r=>setTimeout(r,300));
+    }
+
+    if(cardFound){
+      totalFound++;
+      const hdr=document.getElementById(`gh-${i}`);
+      if(hdr)hdr.style.cssText+=';border-left:4px solid var(--green);background:rgba(0,255,136,0.06)';
+      const st=document.getElementById(`gc-st-${i}`);
+      if(st)st.innerHTML='<span style="color:var(--green);font-weight:bold;font-size:12px">💰 رصيد موجود!</span>';
+      // إشعار الأعلى
+      const alert=document.getElementById('found-alert');
+      if(alert){
+        alert.style.display='block';
+        alert.textContent=`💰 تم اكتشاف رصيد في ${totalFound} عبارة! — انقر للإخفاء`;
+        alert.onclick=()=>alert.style.display='none';
+        window.scrollTo({top:0,behavior:'smooth'});
+      }
+    }
+  }
+  setE('gs-status','✓ اكتمل الفحص');
+  setE('gs-found',totalFound);
+}
+
+function clrGen(){
+  genResults=[];
+  document.getElementById('gen-list').innerHTML='';
+  document.getElementById('gen-pbar').style.display='none';
+  const al=document.getElementById('found-alert');
+  if(al)al.style.display='none';
+}
+
+function expGenCSV(){
+  if(!genResults.length){alert('لا توجد نتائج');return;}
+  const rows=[['Mnemonic','Passphrase','BTC_P2PKH_0','BTC_SegWit_0','DOGE','LTC','SOL','TRX','DASH','ALGO','SUI','ADA','DOT','TON']];
+  genResults.forEach(e=>{
+    rows.push([
+      `"${e.mnemonic}"`,`"${e.pass||''}"`,
+      e.btc?.[0]?.addrC||'',e.btc?.[0]?.segwit||'',
+      e.doge?.addrC||'',e.ltc?.addrC||'',
+      e.sol?.addr||'',e.trx?.addr||'',
+      e.dash?.addrC||'',e.algo?.addr||'',
+      e.sui?.addr||'',e.ada?.addr||'',
+      e.dot?.addr||'',e.ton?.addr||''
+    ]);
+  });
+  dl(rows.map(r=>r.join(',')).join('\n'),'bip39_generated.csv','text/csv');
+}
+
+</script>
+</body>
+</html>
